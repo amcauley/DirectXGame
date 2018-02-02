@@ -1,0 +1,17 @@
+# Roboto Mono
+# Christian Robertson
+# https://fonts.google.com
+# Regular 400, 56px
+# Jan. 6, 2018
+#
+# How to interpret this texture. Fixed width font, so don't need to individually specify location of each character. See enum in TexText.h.
+I 0
+#
+# Texture filename
+F Engine/Fonts/RobotoMono.dds
+#
+# Sizes: Num character rows and cols, starting vert offset, starting horiz offset, char height, char width, vert step size, horiz step size
+S 11 9 3 6 58 34 58 34
+#
+# Character order (left to right, top to bottom)
+C ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789‘?’“!”(%).[#]{@}/&\<-+÷×=>®*©$€£¥¢:;,
