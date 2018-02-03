@@ -7,7 +7,7 @@
 
 class TexPoly : public VisualModel
 {
-private:
+protected:
   ID3D11VertexShader  *m_pVs;               // the pointer to the vertex shader
   ID3D11PixelShader   *m_pPs;               // the pointer to the pixel shader
   ID3D11Buffer        *m_pVBuffer;          // the pointer to the vertex buffer

@@ -16,7 +16,7 @@ bool TexRect::init(
   std::string &texFileName,
   bool bStaticScreenLoc)
 {
-  bStaticScreenLoc = bStaticScreenLoc;
+  m_bStaticScreenLoc = bStaticScreenLoc;
 
   Pos3 bottomLeftPt;
   bottomLeftPt.pos.x = topLeftPt.pos.x + (bottomRightPt.pos.x - topRightPt.pos.x);
@@ -33,4 +33,29 @@ bool TexRect::init(
   TexPoly::init(dev, devcon, texFileName, rectPoints);
 
   return true;
+}
+
+
+bool TexRect::init(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float width,
+  float height,
+  std::string &texFileName,
+  bool bStaticScreenLoc)
+{
+  float halfHeight = height * 0.5;
+  float halfWidth = width * 0.5;
+  Pos3 topLeft(-halfWidth, halfHeight, 0.0);
+  Pos3 topRight(halfWidth, halfHeight, 0.0);
+  Pos3 bottomRight(halfWidth, -halfHeight, 0.0);
+
+  return init(
+    dev,
+    devcon,
+    topLeft,
+    topRight,
+    bottomRight,
+    texFileName,
+    bStaticScreenLoc);
 }

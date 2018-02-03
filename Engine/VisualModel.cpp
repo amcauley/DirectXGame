@@ -3,6 +3,7 @@
 #include "TexText.h"
 #include "TexPoly.h"
 #include "TexRect.h"
+#include "TexBox.h"
 
 VisualModelType VisualModel::getType()
 {
@@ -63,6 +64,11 @@ bool VisualModel::renderVModel(
       static_cast<TexRect*>(pModel)->render(dev, devcon);
       break;
     }
+    case VISUAL_MODEL_TEX_BOX:
+    {
+      static_cast<TexBox*>(pModel)->render(dev, devcon);
+      break;
+    }
     case VISUAL_MODEL_TEX_TEXT:
     {
       static_cast<TexText*>(pModel)->render(dev, devcon);
@@ -105,6 +111,10 @@ bool VisualModel::releaseVModel(VisualModel *pModel)
     case VISUAL_MODEL_TEX_RECT:
     {
       return static_cast<TexRect*>(pModel)->release();
+    }
+    case VISUAL_MODEL_TEX_BOX:
+    {
+      return static_cast<TexBox*>(pModel)->release();
     }
     default:
     {

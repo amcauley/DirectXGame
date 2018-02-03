@@ -22,7 +22,7 @@ bool TexPoly::init(
   std::vector<Pos3Uv2> &vertices,
   bool bStaticScreenLoc)
 {
-  bStaticScreenLoc = bStaticScreenLoc;
+  m_bStaticScreenLoc = bStaticScreenLoc;
   m_vertices = vertices;
   m_texFileName = texFileName;
 
