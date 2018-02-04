@@ -4,8 +4,10 @@
 #include "CommonTypes.h"
 #include <vector>
 #include "PhysicsModel.h"
+#include "PhysicsUpdateModel.h"
 
-class GravityModel : public PhysicsModel
+
+class GravityModel : public PhysicsUpdateModel
 {
 protected:
 

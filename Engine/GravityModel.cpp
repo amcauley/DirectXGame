@@ -5,7 +5,7 @@
 
 GravityModel::GravityModel()
 {
-  m_type = PHYSICS_MODEL_GRAVITY;
+  m_type = PHYSICS_UPDATE_MODEL_GRAVITY;
 }
 
 
@@ -33,5 +33,5 @@ bool GravityModel::run(
 
 bool GravityModel::release()
 {
-  return PhysicsModel::release();
+  return PhysicsUpdateModel::release();
 }

@@ -1,28 +1,40 @@
 #include "PhysicsModel.h"
+#include "PhysicsUpdateModel.h"
 #include "Logger.h"
-#include "GravityModel.h"
 
-PhysicsModelType PhysicsModel::getType()
+
+PhysicsModel::PhysicsModel()
 {
-  return m_type;
+  m_pUpdateModel = NULL;
 }
 
 
-bool PhysicsModel::run(
-  PModelInput &pModelInput,
-  PModelInput *otherModels[],
-  PModelOutput &output)
+void PhysicsModel::setPuModel(PhysicsUpdateModel *pUpdateModel)
 {
-  return true;
+  m_pUpdateModel = pUpdateModel;
 }
+
+
+PhysicsUpdateModel *PhysicsModel::getPuModel()
+{
+  return m_pUpdateModel;
+}
+
 
 bool PhysicsModel::release()
 {
+  bool bSuccess = true;
+  if (m_pUpdateModel)
+  {
+    bSuccess = PhysicsUpdateModel::releasePuModel(m_pUpdateModel);
+    m_pUpdateModel = NULL;
+  }
+
   return true;
 }
 
 
-bool PhysicsModel::runPModel(
+bool PhysicsModel::runPuModel(
   PModelInput &pModelInput,
   PModelInput *otherModels[],
   PModelOutput &output)
@@ -33,53 +45,6 @@ bool PhysicsModel::runPModel(
     return true;
   }
 
-  PhysicsModel *pModel = pModelInput.pModel;
-  int modelType = pModel->getType();
-  switch (modelType)
-  {
-    case PHYSICS_MODEL_NONE:
-    {
-      return pModel->run(pModelInput, otherModels, output);
-    }
-    case PHYSICS_MODEL_GRAVITY:
-    {
-      return static_cast<GravityModel*>(pModel)->run(pModelInput, otherModels, output);
-    }
-    default:
-    {
-      LOGE("Unexpected physics model type %d", modelType);
-      return false;
-    }
-  }
-
-  return true;
+  return PhysicsUpdateModel::runPuModel(pModelInput, otherModels, output);
 }
 
-bool PhysicsModel::releasePModel(PhysicsModel *pModel)
-{
-  if (!pModel)
-  {
-    //LOGW("Null pModel");
-    return true;
-  }
-
-  PhysicsModelType pmType = pModel->getType();
-  switch (pmType)
-  {
-    case PHYSICS_MODEL_NONE:
-    {
-      return pModel->release();
-    }
-    case PHYSICS_MODEL_GRAVITY:
-    {
-      return static_cast<GravityModel*>(pModel)->release();
-    }
-    default:
-    {
-      LOGE("PModel type not recognized: %d", pmType);
-      return false;
-    }
-  }
-
-  return false;
-}

@@ -31,12 +31,14 @@
 #define GRAVITY_MODEL_MAX_V_MPS (999.9)   // m/s
 
 
-#define JUMP_VELOCITY_MPS       3.0  // m/s
-#define MOVEMENT_VEL_MPS        2.0  // m/s
+#define JUMP_VELOCITY_MPS       4.5  // m/s
+#define MOVEMENT_VEL_MPS        2.5  // m/s
+#define SPRINT_BOOST            1.7  // multiplication factor
 
 #define PHYS_CONST_PI           3.14159
 #define TURN_RATE_RAD_PS        (1.0 * PHYS_CONST_PI) // Turning rate in radians per sec
 
-
+#define MAX_PITCH_RADS          (0.9 * PHYS_CONST_PI / 2)
+#define MIN_PITCH_RADS          (-0.9 * PHYS_CONST_PI / 2)
 
 #endif

@@ -5,13 +5,7 @@
 #include <vector>
 
 class PhysicsModel;
-
-typedef enum PhysicsModelType_
-{
-  PHYSICS_MODEL_NONE = 0,
-  PHYSICS_MODEL_GRAVITY
-} PhysicsModelType;
-
+class PhysicsUpdateModel;
 
 typedef struct PModelInput_t
 {
@@ -40,22 +34,18 @@ typedef struct PModelOutput_t
 class PhysicsModel
 {
 protected:
-  PhysicsModelType m_type = PHYSICS_MODEL_NONE;
+  PhysicsUpdateModel *m_pUpdateModel;
 
 public:
-  static bool releasePModel(PhysicsModel *pModel);
-  static bool runPModel(
+  PhysicsModel();
+
+  static bool runPuModel(
     PModelInput &pModelInput,
     PModelInput *otherModels[],
     PModelOutput &output);
 
-  PhysicsModelType getType();
-
-  virtual bool run(
-    PModelInput &pModelInput,
-    PModelInput *otherModels[],
-    PModelOutput &output
-    );
+  void setPuModel(PhysicsUpdateModel *pUpdateModel);
+  PhysicsUpdateModel* getPuModel();
 
   // Any derived class that has new dynamic memory should implement its own release().
   virtual bool release();

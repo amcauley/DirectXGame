@@ -26,6 +26,7 @@ typedef struct InputApi_
 
   // Binary presses.
   bool bSpace;
+  bool bSprint;
 
 } InputApi;
 

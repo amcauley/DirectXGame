@@ -98,7 +98,7 @@ bool PhysicsManager::run(double timeMs)
       if (!bSkipProc)
       {
         // Currently not passing any other objects during processing.
-        PhysicsModel::runPModel(it->second.in, NULL, it->second.out);
+        PhysicsModel::runPuModel(it->second.in, NULL, it->second.out);
       }
 
       if (!bLastStep)

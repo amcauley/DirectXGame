@@ -8,7 +8,8 @@ ControllableObj::ControllableObj()
 {
   m_type = GAME_OBJECT_CONTROLLABLE;
   m_pVModel = NULL;
-  m_pPModel = new GravityModel;
+  m_pPModel = new PhysicsModel;
+  m_pPModel->setPuModel(new GravityModel);
   m_lastJumpMs = 0.0;
 
   LOGD("GameObject %lu = type %d", static_cast<unsigned long>(m_uuid), m_type);
@@ -55,11 +56,18 @@ bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, flo
   tempRotVel.pos.y = input.yawCw * TURN_RATE_RAD_PS * SEC_PER_STEP;
   setRotVel(tempRotVel);
 
+
   Pos3 tempRot = getRot();
-  if (tempRot.pos.x > 2 * PHYS_CONST_PI)
+
+  if (tempRot.pos.x > MAX_PITCH_RADS)
   {
-    tempRot.pos.x -= int(tempRot.pos.x / (2 * PHYS_CONST_PI)) * 2 * PHYS_CONST_PI;
+    tempRot.pos.x = MAX_PITCH_RADS;
   }
+  else if (tempRot.pos.x < MIN_PITCH_RADS)
+  {
+    tempRot.pos.x = MIN_PITCH_RADS;
+  }
+
   if (tempRot.pos.y > 2 * PHYS_CONST_PI)
   {
     tempRot.pos.y -= int(tempRot.pos.y / (2 * PHYS_CONST_PI)) * 2 * PHYS_CONST_PI;
@@ -76,8 +84,9 @@ bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, flo
   velUp           = velUp * cosFactor - velRight * sinFactor;
   velRight        = velRight * cosFactor + origVelUp * sinFactor;
 
-  tempVel.pos.x   = velRight * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP;
-  tempVel.pos.z   = -velUp * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP;
+  float speedBoost  = input.bSprint ? SPRINT_BOOST : 1.0;
+  tempVel.pos.x     = velRight * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * speedBoost;
+  tempVel.pos.z     = -velUp * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * speedBoost;
 
   setVel(tempVel);
 

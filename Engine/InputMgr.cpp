@@ -157,6 +157,8 @@ bool InputMgr::getUpdate(InputApi &inputUpdate)
     inputUpdate.yawCw = -1.0;
   }
 
+  inputUpdate.bSprint = 0x80 & m_keyboardState[DIK_LSHIFT];
+
   //...
 
   return bSuccess;
