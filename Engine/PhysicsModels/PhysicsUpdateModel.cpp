@@ -1,6 +1,6 @@
 #include "PhysicsUpdateModel.h"
-#include "Logger.h"
-#include "GravityModel.h"
+#include "../Logger.h"
+#include "PhysicsUpdateModels\GravityModel.h"
 
 PhysicsUpdateModelType PhysicsUpdateModel::getType()
 {

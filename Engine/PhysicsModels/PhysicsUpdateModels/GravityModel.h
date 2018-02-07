@@ -1,10 +1,10 @@
 #ifndef GRAVITY_MODEL_H
 #define GRAVITY_MODEL_H
 
-#include "CommonTypes.h"
+#include "../../CommonTypes.h"
 #include <vector>
-#include "PhysicsModel.h"
-#include "PhysicsUpdateModel.h"
+#include "../../PhysicsModel.h"
+#include "../PhysicsUpdateModel.h"
 
 
 class GravityModel : public PhysicsUpdateModel

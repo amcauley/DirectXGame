@@ -2,8 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include "Util.h"
-#include "Logger.h"
+#include "../Util.h"
+#include "../Logger.h"
 
 TexText::TexText()
 {

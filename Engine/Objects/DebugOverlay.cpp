@@ -1,6 +1,6 @@
 #include "DebugOverlay.h"
-#include "TexText.h"
-#include "Logger.h"
+#include "../VisualModels/TexText.h"
+#include "../Logger.h"
 
 DebugOverlay::DebugOverlay()
 {

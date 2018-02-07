@@ -1,8 +1,8 @@
 #ifndef CONTROLLABLE_OBJ_H
 #define CONTROLLABLE_OBJ_H
 
-#include "GameObject.h"
-#include "Timing.h"
+#include "../GameObject.h"
+#include "../Timing.h"
 
 class ControllableObj : public GameObject
 {

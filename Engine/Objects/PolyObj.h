@@ -1,8 +1,8 @@
 #ifndef POLY_OBJ_H
 #define POLY_OBJ_H
 
-#include "GameObject.h"
-#include "TexRect.h"
+#include "../GameObject.h"
+#include "../VisualModels/TexRect.h"
 
 class PolyObj : public GameObject
 {

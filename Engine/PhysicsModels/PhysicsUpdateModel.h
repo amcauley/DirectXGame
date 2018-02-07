@@ -1,8 +1,8 @@
 #ifndef PHYSICS_UPDATE_MODEL_H
 #define PHYSICS_UPDATE_MODEL_H
 
-#include "CommonTypes.h"
-#include "PhysicsModel.h"
+#include "../CommonTypes.h"
+#include "../PhysicsModel.h"
 #include <vector>
 
 class PhysicsModel;

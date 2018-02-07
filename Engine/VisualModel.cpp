@@ -1,9 +1,9 @@
 #include "VisualModel.h"
 #include "Logger.h"
-#include "TexText.h"
-#include "TexPoly.h"
-#include "TexRect.h"
-#include "TexBox.h"
+#include "VisualModels/TexText.h"
+#include "VisualModels/TexPoly.h"
+#include "VisualModels/TexRect.h"
+#include "VisualModels/TexBox.h"
 
 VisualModelType VisualModel::getType()
 {

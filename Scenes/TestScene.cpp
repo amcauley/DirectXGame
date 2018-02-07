@@ -1,9 +1,9 @@
 #include "TestScene.h"
 #include "../Engine/CommonPhysConsts.h"
-#include "../Engine/PolyObj.h"
-#include "../Engine/DebugOverlay.h"
-#include "../Engine/ControllableObj.h"
-#include "../Engine/TexBox.h"
+#include "../Engine/Objects/PolyObj.h"
+#include "../Engine/Objects/DebugOverlay.h"
+#include "../Engine/Objects/ControllableObj.h"
+#include "../Engine/VisualModels/TexBox.h"
 
 TestScene::TestScene()
 {

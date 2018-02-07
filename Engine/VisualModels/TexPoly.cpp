@@ -1,6 +1,6 @@
 #include "TexPoly.h"
-#include "Util.h"
-#include "Logger.h"
+#include "../Util.h"
+#include "../Logger.h"
 
 TexPoly::TexPoly()
 {

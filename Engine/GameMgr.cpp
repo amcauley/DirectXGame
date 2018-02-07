@@ -1,7 +1,7 @@
 #include "GameMgr.h"
 #include "Logger.h"
 #include "GameObject.h"
-#include "DebugOverlay.h"
+#include "Objects/DebugOverlay.h"
 #include "CommonPhysConsts.h"
 
 GameMgr::GameMgr()

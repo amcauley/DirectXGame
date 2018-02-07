@@ -1,9 +1,9 @@
 #include "GameObject.h"
 #include "Util.h"
 #include "Logger.h"
-#include "DebugOverlay.h"
-#include "PolyObj.h"
-#include "ControllableObj.h"
+#include "Objects/DebugOverlay.h"
+#include "Objects/PolyObj.h"
+#include "Objects/ControllableObj.h"
 
 GameObject::GameObject()
 {

@@ -1,6 +1,6 @@
 #include "GravityModel.h"
-#include "CommonPhysConsts.h"
-#include "Logger.h"
+#include "../../CommonPhysConsts.h"
+#include "../../Logger.h"
 
 
 GravityModel::GravityModel()

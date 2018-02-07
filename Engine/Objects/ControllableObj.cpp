@@ -1,7 +1,7 @@
 #include "ControllableObj.h"
-#include "GravityModel.h"
-#include "CommonPhysConsts.h"
-#include "Logger.h"
+#include "../PhysicsModels/PhysicsUpdateModels/GravityModel.h"
+#include "../CommonPhysConsts.h"
+#include "../Logger.h"
 #include <cmath>
 
 ControllableObj::ControllableObj()

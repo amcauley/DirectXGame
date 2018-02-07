@@ -1,8 +1,8 @@
 #ifndef DEBUG_OVERLAY_H
 #define DEBUG_OVERLAY_H
 
-#include "GameObject.h"
-#include "Timing.h"
+#include "../GameObject.h"
+#include "../Timing.h"
 
 class DebugOverlay : public GameObject
 {

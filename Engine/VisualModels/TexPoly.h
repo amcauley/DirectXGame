@@ -1,8 +1,8 @@
 #ifndef TEX_POLY_H
 #define TEX_POLY_H
 
-#include "CommonTypes.h"
-#include "VisualModel.h"
+#include "../CommonTypes.h"
+#include "../VisualModel.h"
 #include <vector>
 
 class TexPoly : public VisualModel

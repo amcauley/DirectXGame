@@ -1,8 +1,8 @@
 #ifndef TEX_TEXT_H
 #define TEX_TEXT_H
 
-#include "CommonTypes.h"
-#include "VisualModel.h"
+#include "../CommonTypes.h"
+#include "../VisualModel.h"
 #include <vector>
 #include <map>
 

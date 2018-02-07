@@ -1,5 +1,5 @@
 #include "PolyObj.h"
-#include "Logger.h"
+#include "../Logger.h"
 
 PolyObj::PolyObj()
 {

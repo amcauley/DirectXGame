@@ -1,9 +1,9 @@
 #include "GraphicsManager.h"
 #include "Util.h"
 #include "Logger.h"
-#include "TexPoly.h"
-#include "TexRect.h"
-#include "TexText.h"
+#include "VisualModels/TexPoly.h"
+#include "VisualModels/TexRect.h"
+#include "VisualModels/TexText.h"
 
 GraphicsManager::GraphicsManager()
 {
