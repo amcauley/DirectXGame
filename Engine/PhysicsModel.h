@@ -6,6 +6,7 @@
 
 class PhysicsModel;
 class PhysicsUpdateModel;
+class CollisionModel;
 
 typedef struct PModelInput_t
 {
@@ -28,6 +29,9 @@ typedef struct PModelOutput_t
   Pos3  vel;
   Pos3  rot;
   Pos3  rotVel;
+
+  ///TODO: collision info
+
 } PModelOutput;
 
 // Base class for physics (including user input) handling.
@@ -35,9 +39,13 @@ class PhysicsModel
 {
 protected:
   PhysicsUpdateModel *m_pUpdateModel;
+  CollisionModel     *m_pCollisionModel;
 
 public:
   PhysicsModel();
+
+  static void prePhysInputToOutputTransfer(PModelInput &in, PModelOutput &out);
+  static void interStepOutputToInputTransfer(PModelOutput &out, PModelInput &in);
 
   static bool runPuModel(
     PModelInput &pModelInput,
@@ -46,6 +54,9 @@ public:
 
   void setPuModel(PhysicsUpdateModel *pUpdateModel);
   PhysicsUpdateModel* getPuModel();
+
+  void setCollisionModel(CollisionModel *pCollisionModel);
+  CollisionModel* getCollisionModel();
 
   // Any derived class that has new dynamic memory should implement its own release().
   virtual bool release();

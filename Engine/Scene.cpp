@@ -50,12 +50,14 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
   // Run physics
   sceneIo.pPhysicsMgr->run(sceneIo.timeMs);
 
-  // Get physics results
+  // 2nd loop: get physics results
   PModelOutput tempPmOut;
   for (int i = 0; i < m_objs.size(); ++i)
   {
     sceneIo.pPhysicsMgr->getResult(m_objs[i]->getUuid(), tempPmOut);
-    
+   
+    ///TODO: run object-level collision handling based on any collisions
+
     // Assign back to object.
     m_objs[i]->setPos(tempPmOut.pos);
     m_objs[i]->setVel(tempPmOut.vel);
@@ -63,7 +65,7 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
     m_objs[i]->setRotVel(tempPmOut.rotVel);
   }
 
-  // 2nd loop: (non-physics) update routines and rendering
+  // 3rd loop: (non-physics) update routines and rendering
   for (int i = 0; i < m_objs.size(); ++i)
   {
     if (!GameObject::updateGameObject(m_objs[i], dev, devcon, sceneIo.timeMs, sceneIo.input))

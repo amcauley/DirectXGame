@@ -2,6 +2,7 @@
 #include "../PhysicsModels/PhysicsUpdateModels/GravityModel.h"
 #include "../CommonPhysConsts.h"
 #include "../Logger.h"
+#include "../PhysicsModels/CollisionModels/AABB.h"
 #include <cmath>
 
 ControllableObj::ControllableObj()
@@ -9,6 +10,7 @@ ControllableObj::ControllableObj()
   m_type = GAME_OBJECT_CONTROLLABLE;
   m_pVModel = NULL;
   m_pPModel = new PhysicsModel;
+  m_pPModel->setCollisionModel(new AABB(PLAYER_HITBOX_W, PLAYER_HITBOX_H, PLAYER_HITBOX_D));
   m_pPModel->setPuModel(new GravityModel);
   m_lastJumpMs = 0.0;
 

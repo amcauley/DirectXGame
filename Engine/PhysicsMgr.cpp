@@ -2,6 +2,7 @@
 #include "CommonPhysConsts.h"
 #include <algorithm>
 #include "Logger.h"
+#include "PhysicsModels/CollisionModel.h"
 
 PhysicsManager::PhysicsManager()
 {
@@ -24,7 +25,7 @@ bool PhysicsManager::release()
 }
 
 
-// TODO: Internally PmModelStorage stores actual value of input struct instead of ref/ptr. Prob some minor perf gains available.
+///TODO: Internally PmModelStorage stores actual value of input struct instead of ref/ptr. Prob some minor perf gains available.
 bool PhysicsManager::registerModel(uint64_t uuid, PModelInput *pModelInput)
 {
   // Check if model was previously registered. If so, just copy over input data and clear done flag.
@@ -90,10 +91,7 @@ bool PhysicsManager::run(double timeMs)
     for (std::map<uint64_t, PmModelStorage>::iterator it = m_registeredModelMap.begin(); it != m_registeredModelMap.end(); ++it)
     {
       // Copy input into output, i.e. NULL operation is default in case processing doesn't do anything (either by choice or mistake).
-      it->second.out.pos    = it->second.in.pos;
-      it->second.out.vel    = it->second.in.vel;
-      it->second.out.rot    = it->second.in.rot;
-      it->second.out.rotVel = it->second.in.rotVel;
+      PhysicsModel::prePhysInputToOutputTransfer(it->second.in, it->second.out);
 
       if (!bSkipProc)
       {
@@ -101,13 +99,11 @@ bool PhysicsManager::run(double timeMs)
         PhysicsModel::runPuModel(it->second.in, NULL, it->second.out);
       }
 
+      ///TODO: Move this cleanup into second loop (or prob better to have separate routine)
       if (!bLastStep)
       {
         // Copy over output into input in case we're running multiple steps.
-        it->second.in.pos     = it->second.out.pos;
-        it->second.in.vel     = it->second.out.vel;
-        it->second.in.rot     = it->second.out.rot;
-        it->second.in.rotVel  = it->second.out.rotVel;
+        PhysicsModel::interStepOutputToInputTransfer(it->second.out, it->second.in);
       }
       else
       {
@@ -116,6 +112,24 @@ bool PhysicsManager::run(double timeMs)
         it->second.bActive = false;
       }
     }
+
+    ///TODO: 2nd loop: Now run collision checks on the updated locations, run any physics - model level collision handling.
+
+    //TEST - run a single loop through objects just for testing collision detection
+    for (std::map<uint64_t, PmModelStorage>::iterator itFirst = m_registeredModelMap.begin(); itFirst != m_registeredModelMap.end(); ++itFirst)
+    {
+      std::map<uint64_t, PmModelStorage>::iterator itSecond = itFirst;
+      ++itSecond;
+      for (; itSecond != m_registeredModelMap.end(); ++itSecond)
+      {
+        LOGD("DBG: Checking collision, obj %u and %u", itFirst->first, itSecond->first);
+        if (CollisionModel::modelsCollide(&itFirst->second, &itSecond->second))
+        {
+          LOGD("DBG: Model collision, obj %u and %u", itFirst->first, itSecond->first);
+        }
+      }
+    }
+
     stepsCompleted++;
   } while (stepsCompleted < stepsToRun);
 

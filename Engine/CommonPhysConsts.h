@@ -31,6 +31,11 @@
 #define GRAVITY_MODEL_MAX_V_MPS (999.9)   // m/s
 
 
+#define PLAYER_HITBOX_W         0.5
+#define PLAYER_HITBOX_H         2.0
+#define PLAYER_HITBOX_D         0.5
+
+
 #define JUMP_VELOCITY_MPS       4.5  // m/s
 #define MOVEMENT_VEL_MPS        2.5  // m/s
 #define SPRINT_BOOST            1.7  // multiplication factor
