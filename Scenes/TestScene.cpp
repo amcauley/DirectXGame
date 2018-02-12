@@ -36,6 +36,9 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
     triVerts);
   // Now set the global position.
   pObj->setPos(Pos3(2.0, 1.0, -5.0));
+  pObj->setPModel(new PhysicsModel);
+  pObj->getPModel()->setCollisionModel(new AABB(2.0, 2.0, 0.1));
+  pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB);
   m_objs.push_back(pObj);
 
 
@@ -52,7 +55,8 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   // Now set the global position.
   pObj->setPos(Pos3(-3.0, 0.0, -5.0));
   pObj->setPModel(new PhysicsModel);
-  pObj->getPModel()->setCollisionModel(new AABB(0.8, 0.8, 0.8));
+  pObj->getPModel()->setCollisionModel(new AABB(1.2, 1.2, 1.2));
+  pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
   m_objs.push_back(pObj);
 
 
@@ -113,7 +117,7 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   }
   tempRot.pos.x = X_SPIN_SPEED_RAD_PER_STEP * spinCnt * stepsPerFrame;
   tempRot.pos.z = Z_SPIN_SPEED_RAD_PER_STEP * spinCnt * stepsPerFrame;
-  m_objs[2]->setRot(tempRot);
+  //m_objs[2]->setRot(tempRot);
 
   // Camera follows the controllable object (in location 0).
   tempPos = m_objs[0]->getPos();

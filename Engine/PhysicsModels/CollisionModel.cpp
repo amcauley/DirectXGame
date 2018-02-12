@@ -2,6 +2,7 @@
 #include "../PhysicsMgr.h"
 #include "../Logger.h"
 #include "CollisionModels/AABB.h"
+#include "CollisionModels/AABBControllable.h"
 
 CollisionModel::CollisionModel()
 {
@@ -12,6 +13,22 @@ CollisionModel::CollisionModel()
 CollisionModelType CollisionModel::getType()
 {
   return m_type;
+}
+
+
+// Only intended to manually set types that have identical handling within the type, but
+// other objects that collide with it may change handling. For example, COLLISION_MODEL_AABB
+// and COLLISION_MODEL_AABB_IMMOBILE have identical handling themselves, but COLLISION_MODEL_AABB_CONTROLLABLE
+// will pass through the standard AABB but not the immobile version.
+void CollisionModel::setType(CollisionModelType type)
+{
+  m_type = type;
+}
+
+
+Pos3 CollisionModel::getPos()
+{
+  return m_pos;
 }
 
 
@@ -42,9 +59,12 @@ bool CollisionModel::modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSeco
     case COLLISION_MODEL_NONE:
       bCollision = false;
     case COLLISION_MODEL_AABB:
+    case COLLISION_MODEL_AABB_IMMOBILE:
       switch (secondType)
       {
         case COLLISION_MODEL_AABB:
+        case COLLISION_MODEL_AABB_IMMOBILE:
+        case COLLISION_MODEL_AABB_CONTROLLABLE:
         {
           bCollision = modelsCollideAabbAabb(pFirst, pSecond);
           break;
@@ -116,10 +136,55 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
   return intersects;
 }
 
-
-void CollisionModel::onCollision(PmModelStorage *pIo)
+// This one should be defined per Collision Model type.
+void CollisionModel::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo)
 {
 
+}
+
+
+void CollisionModel::handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo)
+{
+  PmModelStorage *pActiveIo = pFirstIo;
+  PmModelStorage *pOtherIo = pSecondIo;
+  CollisionModel *pActiveModel = pActiveIo->in.pModel->getCollisionModel();
+  CollisionModel *pOtherModel = pOtherIo->in.pModel->getCollisionModel();
+
+  for (int i = 0; i < 2; i++)
+  {
+    // Process the other model as active.
+    if (i == 1)
+    {
+      pActiveIo = pSecondIo;
+      pOtherIo = pFirstIo;
+
+      CollisionModel *pTemp = pActiveModel;
+      pActiveModel = pOtherModel;
+      pOtherModel = pTemp;
+    }
+
+    CollisionModelType type = pActiveModel->getType();
+    //LOGD("handleCollision activeType %u, otherType %u", type, pOtherModel->getType());
+    switch (type)
+    {
+      case COLLISION_MODEL_AABB:
+      case COLLISION_MODEL_AABB_IMMOBILE:
+      {
+        static_cast<AABB*>(pActiveModel)->onCollision(pActiveIo, pOtherIo);
+        break;
+      }
+      case COLLISION_MODEL_AABB_CONTROLLABLE:
+      {
+        static_cast<AABBControllable*>(pActiveModel)->onCollision(pActiveIo, pOtherIo);
+        break;
+      }
+      default:
+      {
+        LOGW("Unexpected collision model %u", type);
+        break;
+      }
+    }
+  }
 }
 
 

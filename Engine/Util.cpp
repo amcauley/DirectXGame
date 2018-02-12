@@ -21,3 +21,8 @@ bool HR_FAILED(HRESULT hr)
 
   return false;
 }
+
+bool squaresOverlap(Pos2 &center0, Pos2 &wh0, Pos2 &center1, Pos2 &wh1)
+{
+  return true;
+}

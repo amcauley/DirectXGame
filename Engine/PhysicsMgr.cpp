@@ -98,35 +98,36 @@ bool PhysicsManager::run(double timeMs)
         // Currently not passing any other objects during processing.
         PhysicsModel::runPuModel(it->second.in, NULL, it->second.out);
       }
+    }
 
-      ///TODO: Move this cleanup into second loop (or prob better to have separate routine)
+    // 2nd loop: Now run collision checks on the updated locations, run any physics - model level collision handling.
+    for (std::map<uint64_t, PmModelStorage>::iterator itFirst = m_registeredModelMap.begin(); itFirst != m_registeredModelMap.end(); ++itFirst)
+    {
+      if (!bSkipProc)
+      {
+        std::map<uint64_t, PmModelStorage>::iterator itSecond = itFirst;
+        ++itSecond;
+        for (; itSecond != m_registeredModelMap.end(); ++itSecond)
+        {
+          //LOGD("DBG: Checking collision, obj %u and %u", itFirst->first, itSecond->first);
+          if (CollisionModel::modelsCollide(&itFirst->second, &itSecond->second))
+          {
+            //LOGD("DBG: Model collision, obj %u and %u", itFirst->first, itSecond->first);
+            CollisionModel::handleCollision(&itFirst->second, &itSecond->second);
+          }
+        }
+      }
+
       if (!bLastStep)
       {
         // Copy over output into input in case we're running multiple steps.
-        PhysicsModel::interStepOutputToInputTransfer(it->second.out, it->second.in);
+        PhysicsModel::interStepOutputToInputTransfer(itFirst->second.out, itFirst->second.in);
       }
       else
       {
         // On last step (or nonexistent step in case we run 0 steps this frame), clear active flag.
         // If we have further processing for this object, it'll re-register for the next frame.
-        it->second.bActive = false;
-      }
-    }
-
-    ///TODO: 2nd loop: Now run collision checks on the updated locations, run any physics - model level collision handling.
-
-    //TEST - run a single loop through objects just for testing collision detection
-    for (std::map<uint64_t, PmModelStorage>::iterator itFirst = m_registeredModelMap.begin(); itFirst != m_registeredModelMap.end(); ++itFirst)
-    {
-      std::map<uint64_t, PmModelStorage>::iterator itSecond = itFirst;
-      ++itSecond;
-      for (; itSecond != m_registeredModelMap.end(); ++itSecond)
-      {
-        LOGD("DBG: Checking collision, obj %u and %u", itFirst->first, itSecond->first);
-        if (CollisionModel::modelsCollide(&itFirst->second, &itSecond->second))
-        {
-          LOGD("DBG: Model collision, obj %u and %u", itFirst->first, itSecond->first);
-        }
+        itFirst->second.bActive = false;
       }
     }
 
