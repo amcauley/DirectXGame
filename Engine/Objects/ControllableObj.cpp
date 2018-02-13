@@ -11,6 +11,7 @@ ControllableObj::ControllableObj()
   m_pVModel = NULL;
   m_pPModel = new PhysicsModel;
   m_pPModel->setCollisionModel(new AABBControllable(PLAYER_HITBOX_W, PLAYER_HITBOX_H, PLAYER_HITBOX_D));
+  m_pos.pos.y = PLAYER_HITBOX_H / 2;
   m_pPModel->setPuModel(new GravityModel);
   m_lastJumpMs = 0.0;
 
@@ -26,13 +27,9 @@ bool ControllableObj::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input)
 {
   Pos3 tempVel = getVel();
-  const double JUMP_COOLDOWN_MS = 500;
+  const double JUMP_COOLDOWN_MS = 300;
   if ((input.bSpace) && (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS))
   {
-    // Start from ground
-    m_pos.pos.y = 0;
-    m_vel.pos.y = 0;
-
     m_lastJumpMs = timeMs;
     tempVel.pos.y += (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
   }
@@ -95,9 +92,10 @@ bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, flo
   //LOGD("x: %f, vx %f", getPos().pos.x, getVel().pos.x);
   //LOGD("xRot: %f, vXRot %f", getRot().pos.x, getRotVel().pos.x);
 
-  if (m_pos.pos.y < 0)
+  // Temp: prevent from falling through floor
+  if (m_pos.pos.y < PLAYER_HITBOX_H / 2)
   {
-    m_pos.pos.y = 0;
+    m_pos.pos.y = PLAYER_HITBOX_H / 2;
     m_vel.pos.y = 0;
   }
 

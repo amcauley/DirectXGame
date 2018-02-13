@@ -34,6 +34,7 @@
 #define PLAYER_HITBOX_W         0.5
 #define PLAYER_HITBOX_H         2.0
 #define PLAYER_HITBOX_D         0.5
+#define EYE_VERT_OFFSET         0.9;  // Camera offset above center of player hitbox
 
 
 #define JUMP_VELOCITY_MPS       4.5  // m/s

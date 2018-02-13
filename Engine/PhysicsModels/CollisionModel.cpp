@@ -116,6 +116,7 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
   box's rightmost index is greater than the rightmost box's left index. */
   firstVal = firstObjPos.pos.x + firstBoxPos.pos.x;
   secondVal = secondObjPos.pos.x + secondBoxPos.pos.x;
+  //LOGD("X firstVal %f, secondVal %f, firstDimX %f, secondDimX %f", firstVal, secondVal, firstDim.pos.x, secondDim.pos.x);
   lowVal = fminf(firstVal, secondVal);
   if (lowVal == firstVal) intersects = (firstVal + firstDim.pos.x / 2 >= secondVal - secondDim.pos.x / 2);
   else intersects = (secondVal + secondDim.pos.x / 2 >= firstVal - firstDim.pos.x / 2);
@@ -123,6 +124,7 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
 
   firstVal = firstObjPos.pos.y + firstBoxPos.pos.y;
   secondVal = secondObjPos.pos.y + secondBoxPos.pos.y;
+  //LOGD("Y firstVal %f, secondVal %f, firstDimY %f, secondDimY %f", firstVal, secondVal, firstDim.pos.y, secondDim.pos.y);
   lowVal = fminf(firstVal, secondVal);
   if (lowVal == firstVal) intersects = (firstVal + firstDim.pos.y / 2 >= secondVal - secondDim.pos.y / 2);
   else intersects = (secondVal + secondDim.pos.y / 2 >= firstVal - firstDim.pos.y / 2);
@@ -130,6 +132,7 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
 
   firstVal = firstObjPos.pos.z + firstBoxPos.pos.z;
   secondVal = secondObjPos.pos.z + secondBoxPos.pos.z;
+  //LOGD("Z firstVal %f, secondVal %f, firstDimZ %f, secondDimZ %f", firstVal, secondVal, firstDim.pos.z, secondDim.pos.z);
   lowVal = fminf(firstVal, secondVal);
   if (lowVal == firstVal) intersects = (firstVal + firstDim.pos.z / 2 >= secondVal - secondDim.pos.z / 2);
   else intersects = (secondVal + secondDim.pos.z / 2 >= firstVal - firstDim.pos.z / 2);

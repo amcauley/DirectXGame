@@ -16,11 +16,18 @@
 #define S_WIDTH  960
 #define S_HEIGHT 540
 
-// Globals. TODO: Start moving these into appropriate classes.
-IDXGISwapChain *swapchain;
-ID3D11Device *dev;
-ID3D11DeviceContext *devcon;
-ID3D11RenderTargetView *backbuffer;
+// Globals.
+///TODO: Start moving these into appropriate classes.
+IDXGISwapChain *swapchain = NULL;
+ID3D11Device *dev = NULL;
+ID3D11DeviceContext *devcon = NULL;
+ID3D11RenderTargetView *backbuffer = NULL;
+
+ID3D11Texture2D* pDepthStencilBuffer = NULL;
+ID3D11DepthStencilState *pDepthStencilState = NULL;
+ID3D11DepthStencilView *pDepthStencilView = NULL;
+
+ID3D11RasterizerState* pRasterState = NULL;
 
 GameMgr g_gameMgr;
 
@@ -151,7 +158,7 @@ bool InitD3D(HWND hWnd)
   scd.BufferDesc.Height = S_HEIGHT;                      // set the back buffer height
   scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;     // how swap chain is to be used
   scd.OutputWindow = hWnd;                               // the window to be used
-  scd.SampleDesc.Count = 4;                              // how many multisamples
+  scd.SampleDesc.Count = 1;                              // how many multisamples (TODO: investigate why depth buffer failed when this was > 1)
   scd.Windowed = TRUE;                                   // windowed/full-screen mode
   scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;    // allow full-screen switching
 
@@ -185,17 +192,114 @@ bool InitD3D(HWND hWnd)
     return false;
   }
 
-  pBackBuffer->Release();
+  RELEASE_NON_NULL(pBackBuffer);
 
-  // Set the render target as the back buffer.
-  devcon->OMSetRenderTargets(1, &backbuffer, NULL);
+  // Depth buffering: http://www.rastertek.com/dx11tut03.html
+  // Initialize the description of the depth buffer.
+  D3D11_TEXTURE2D_DESC depthBufferDesc;
+  ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
+
+  // Set up the description of the depth buffer.
+  depthBufferDesc.Width = S_WIDTH;
+  depthBufferDesc.Height = S_HEIGHT;
+  depthBufferDesc.MipLevels = 1;
+  depthBufferDesc.ArraySize = 1;
+  depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+  depthBufferDesc.SampleDesc.Count = 1;
+  depthBufferDesc.SampleDesc.Quality = 0;
+  depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+  depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+  depthBufferDesc.CPUAccessFlags = 0;
+  depthBufferDesc.MiscFlags = 0;
+
+  // Create the texture for the depth buffer using the filled out description.
+  if (HR_FAILED(dev->CreateTexture2D(&depthBufferDesc, NULL, &pDepthStencilBuffer)))
+  {
+    return false;
+  }
+
+  // Initialize the description of the stencil state.
+  D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
+  ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+
+  // Set up the description of the stencil state.
+  depthStencilDesc.DepthEnable = true;
+  depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+  depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+  depthStencilDesc.StencilEnable = true;
+  depthStencilDesc.StencilReadMask = 0xFF;
+  depthStencilDesc.StencilWriteMask = 0xFF;
+
+  // Stencil operations if pixel is front-facing.
+  depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+  depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+  depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+  depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+  // Stencil operations if pixel is back-facing.
+  depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+  depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+  depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+  depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+  // Create the depth stencil state.
+  if(HR_FAILED(dev->CreateDepthStencilState(&depthStencilDesc, &pDepthStencilState)))
+  {
+    return false;
+  }
+
+  // Set the depth stencil state.
+  devcon->OMSetDepthStencilState(pDepthStencilState, 1);
+
+  // Initailze the depth stencil view.
+  D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+  ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+  // Set up the depth stencil view description.
+  depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+  depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+  depthStencilViewDesc.Texture2D.MipSlice = 0;
+
+  // Create the depth stencil view.
+  if(HR_FAILED(dev->CreateDepthStencilView(pDepthStencilBuffer, &depthStencilViewDesc, &pDepthStencilView)))
+  {
+    return false;
+  }
+
+  // Bind the render target view and depth stencil buffer to the output render pipeline.
+  devcon->OMSetRenderTargets(1, &backbuffer, pDepthStencilView);
+
+  // Setup the raster description which will determine how and what polygons will be drawn.
+  D3D11_RASTERIZER_DESC rasterDesc;
+  rasterDesc.AntialiasedLineEnable = false;
+  rasterDesc.CullMode = D3D11_CULL_BACK;
+  rasterDesc.DepthBias = 0;
+  rasterDesc.DepthBiasClamp = 0.0f;
+  rasterDesc.DepthClipEnable = true;
+  rasterDesc.FillMode = D3D11_FILL_SOLID;
+  rasterDesc.FrontCounterClockwise = false;
+  rasterDesc.MultisampleEnable = false;
+  rasterDesc.ScissorEnable = false;
+  rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+  // Create the rasterizer state from the description we just filled out.
+  if(HR_FAILED(dev->CreateRasterizerState(&rasterDesc, &pRasterState)))
+  {
+    return false;
+  }
+
+  // Now set the rasterizer state.
+  devcon->RSSetState(pRasterState);
 
   // Set the viewport.
   D3D11_VIEWPORT viewport;
   ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
-  viewport.TopLeftX = 0;
-  viewport.TopLeftY = 0;
+  viewport.TopLeftX = 0.0;
+  viewport.TopLeftY = 0.0;
+  viewport.MinDepth = 0.0;
+  viewport.MaxDepth = 1.0;
   viewport.Width = S_WIDTH;
   viewport.Height = S_HEIGHT;
 
@@ -219,6 +323,9 @@ bool RenderFrame(void)
 {
   // Background color.
   devcon->ClearRenderTargetView(backbuffer, D3DXCOLOR(0.0f, 0.5f, 0.5f, 1.0f));
+
+  // Clear the depth buffer.
+  devcon->ClearDepthStencilView(pDepthStencilView, D3D11_CLEAR_DEPTH, 1.0f, 0);
 
   if (!g_gameMgr.update(dev, devcon))
   {
@@ -246,6 +353,10 @@ bool CleanD3D(void)
 
   g_gameMgr.release();
 
+  RELEASE_NON_NULL(pRasterState);
+  RELEASE_NON_NULL(pDepthStencilState);
+  RELEASE_NON_NULL(pDepthStencilView);
+  RELEASE_NON_NULL(pDepthStencilBuffer);
   RELEASE_NON_NULL(swapchain);
   RELEASE_NON_NULL(backbuffer);
   RELEASE_NON_NULL(dev);

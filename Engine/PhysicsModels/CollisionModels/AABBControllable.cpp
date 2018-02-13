@@ -12,7 +12,9 @@ AABBControllable::AABBControllable()
 AABBControllable::AABBControllable(float w, float h, float d)
 {
   m_type = COLLISION_MODEL_AABB_CONTROLLABLE;
-  AABB::AABB(w, h, d);
+  m_width = w;
+  m_height = h;
+  m_depth = d;
 }
 
 
@@ -68,7 +70,7 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
   // We would have hit it in the past, but it's too long ago - not relevant to current calcs. Also don't just
   // use time directly, this was original design and led to gravity slowly sinking player through floor, so
   // hit in past was too long ago (due to slow velocity) to count.
-  const float MAX_ACTIONABLE_DIST_2 = 0.01;
+  const float MAX_ACTIONABLE_DIST_2 = 0.05;
 
   vel = pPrimaryIo->in.vel.pos.x;
   if (vel != 0)
@@ -121,6 +123,7 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
     {
       distY = (primaryPos.pos.y + pPrimaryAabb->getPos().pos.y + pPrimaryAabb->getDim().pos.y / 2) -
         (otherPos.pos.y + pOtherAabb->getPos().pos.y - pOtherAabb->getDim().pos.y / 2);
+      //LOGD("Moving top, stationary bottom, distY %f", distY);
     }
     // moving bottom face against stationary top face
     else

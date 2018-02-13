@@ -46,16 +46,16 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   // These coords are relative the object's center, currently at the origin.
   pBox->init(
     dev, devcon,
-    0.8, 0.8, 0.8,
+    0.7, 0.7, 0.7,
     std::string("Textures/cat.dds"),
     2.0, 3.0
   );
   pObj = new PolyObj;
   pObj->init(pBox);
   // Now set the global position.
-  pObj->setPos(Pos3(-3.0, 0.0, -5.0));
+  pObj->setPos(Pos3(-3.0, 0.35, -5.0));
   pObj->setPModel(new PhysicsModel);
-  pObj->getPModel()->setCollisionModel(new AABB(1.2, 1.2, 1.2));
+  pObj->getPModel()->setCollisionModel(new AABB(1.1, 1.1, 1.1));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
   m_objs.push_back(pObj);
 
@@ -71,7 +71,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj = new PolyObj;
   pObj->init(pBox);
   // Now set the global position.
-  pObj->setPos(Pos3(0.0, -1.5, 0.0));
+  pObj->setPos(Pos3(0.0, -0.05, 0.0));
   m_objs.push_back(pObj);
 
 
@@ -131,11 +131,8 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   sceneIo.camUp         =  Pos3(upX, upY, upZ);
 
   // Camera translation
-  float deltaX = tempPos.pos.x - sceneIo.camEye.pos.x;
-  float deltaY = tempPos.pos.y - sceneIo.camEye.pos.y;
-  float deltaZ = tempPos.pos.z - sceneIo.camEye.pos.z;
   sceneIo.camEye.pos.x = tempPos.pos.x;
-  sceneIo.camEye.pos.y = tempPos.pos.y;
+  sceneIo.camEye.pos.y = tempPos.pos.y + EYE_VERT_OFFSET;
   sceneIo.camEye.pos.z = tempPos.pos.z;
 
   // Camera view direction
