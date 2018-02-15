@@ -33,16 +33,16 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
 
   // 1st loop: Register objects with physics manager
   PModelInput tempPmIn;
-  for (int i = 0; i < m_objs.size(); ++i)
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    tempPmIn.pModel = m_objs[i]->getPModel();
-    tempPmIn.pos    = m_objs[i]->getPos();
-    tempPmIn.vel    = m_objs[i]->getVel();
-    tempPmIn.rot    = m_objs[i]->getRot();
-    tempPmIn.rotVel = m_objs[i]->getRotVel();
-    if (!sceneIo.pPhysicsMgr->registerModel(m_objs[i]->getUuid(), &tempPmIn))
+    tempPmIn.pModel = it->second->getPModel();
+    tempPmIn.pos    = it->second->getPos();
+    tempPmIn.vel    = it->second->getVel();
+    tempPmIn.rot    = it->second->getRot();
+    tempPmIn.rotVel = it->second->getRotVel();
+    if (!sceneIo.pPhysicsMgr->registerModel(it->second->getUuid(), &tempPmIn))
     {
-      LOGE("Failed to update object [%u]", i);
+      LOGE("Failed to update object [%u]", it->first);
       return false;
     }
   }
@@ -52,30 +52,30 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
 
   // 2nd loop: get physics results
   PModelOutput tempPmOut;
-  for (int i = 0; i < m_objs.size(); ++i)
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    sceneIo.pPhysicsMgr->getResult(m_objs[i]->getUuid(), tempPmOut);
+    sceneIo.pPhysicsMgr->getResult(it->second->getUuid(), tempPmOut);
    
     ///TODO: run object-level collision handling based on any collisions
 
     // Assign back to object.
-    m_objs[i]->setPos(tempPmOut.pos);
-    m_objs[i]->setVel(tempPmOut.vel);
-    m_objs[i]->setRot(tempPmOut.rot);
-    m_objs[i]->setRotVel(tempPmOut.rotVel);
+    it->second->setPos(tempPmOut.pos);
+    it->second->setVel(tempPmOut.vel);
+    it->second->setRot(tempPmOut.rot);
+    it->second->setRotVel(tempPmOut.rotVel);
   }
 
   // 3rd loop: (non-physics) update routines and rendering
-  for (int i = 0; i < m_objs.size(); ++i)
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    if (!GameObject::updateGameObject(m_objs[i], dev, devcon, sceneIo.timeMs, sceneIo.input))
+    if (!GameObject::updateGameObject(it->second, dev, devcon, sceneIo.timeMs, sceneIo.input))
     {
-      LOGE("Failed to update object [%u]", i);
+      LOGE("Failed to update object [%u]", it->first);
       return false;
     }
 
-    sceneIo.pGraphicsMgr->setPosAndRot(m_objs[i]->getPos(), m_objs[i]->getRot());
-    sceneIo.pGraphicsMgr->renderModel(m_objs[i]->getVModel(), dev, devcon);
+    sceneIo.pGraphicsMgr->setPosAndRot(it->second->getPos(), it->second->getRot());
+    sceneIo.pGraphicsMgr->renderModel(it->second->getVModel(), dev, devcon);
   }
 
   return true;
@@ -84,12 +84,12 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
 bool Scene::release()
 {
   bool bSuccess = true;
-  for (int i = 0; i < m_objs.size(); ++i)
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    if (!GameObject::releaseGameObject(m_objs[i]))
+    if (!GameObject::releaseGameObject(it->second))
     {
       // Don't return yet, can still try to release other objects.
-      LOGE("Failed to release obj [%u], continuing", i);
+      LOGE("Failed to release obj [%u], continuing", it->first);
       bSuccess = false;
     }
   }

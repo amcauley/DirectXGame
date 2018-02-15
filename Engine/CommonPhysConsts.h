@@ -26,23 +26,35 @@
 #define RENDER_FAR_DIST_M       100.0 // m
 
 
-#define GRAVITY_MODEL_G_MPSPS   (-10.0)   // m/s/s
+#define GRAVITY_MODEL_G_MPSPS   (-20.0)   // m/s/s
 #define GRAVITY_MODEL_MIN_V_MPS (-40.0)   // m/s  
 #define GRAVITY_MODEL_MAX_V_MPS (999.9)   // m/s
+
+
+// Minimum distance at which past hits will be considered. Keep this small to avoid reacting to
+// some far away wall. Ex) if we're moving at 1 unit/step, don't react to something 1000 steps behind us.
+// We would have hit it in the past, but it's too long ago - not relevant to current calcs. Also don't just
+// use time directly, this was original design and led to gravity slowly sinking player through floor, so
+// hit in past was too long ago (due to slow velocity) to count.
+#define  MAX_ACTIONABLE_DIST_PADDING  0.001
+#define  MAX_ACTIONABLE_DIST          (-GRAVITY_MODEL_MIN_V_MPS * SEC_PER_STEP + MAX_ACTIONABLE_DIST_PADDING)
+#define  MAX_ACTIONABLE_DIST_2        (MAX_ACTIONABLE_DIST * MAX_ACTIONABLE_DIST)
 
 
 #define PLAYER_HITBOX_W         0.5
 #define PLAYER_HITBOX_H         2.0
 #define PLAYER_HITBOX_D         0.5
-#define EYE_VERT_OFFSET         0.9;  // Camera offset above center of player hitbox
+#define EYE_VERT_OFFSET         0.9  // Camera offset above center of player hitbox
 
 
-#define JUMP_VELOCITY_MPS       4.5  // m/s
-#define MOVEMENT_VEL_MPS        2.5  // m/s
+#define JUMP_VELOCITY_MPS       6.5  // m/s
+#define MOVEMENT_VEL_MPS        4.0  // m/s
 #define SPRINT_BOOST            1.7  // multiplication factor
 
 #define PHYS_CONST_PI           3.14159
 #define TURN_RATE_RAD_PS        (1.0 * PHYS_CONST_PI) // Turning rate in radians per sec
+
+#define PHYS_FOV                (0.85 * PHYS_CONST_PI / 2)
 
 #define MAX_PITCH_RADS          (0.9 * PHYS_CONST_PI / 2)
 #define MIN_PITCH_RADS          (-0.9 * PHYS_CONST_PI / 2)

@@ -31,7 +31,7 @@ bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, flo
   if ((input.bSpace) && (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS))
   {
     m_lastJumpMs = timeMs;
-    tempVel.pos.y += (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+    tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
   }
 
   // Handle non-jump movement
@@ -67,14 +67,6 @@ bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, flo
     tempRot.pos.x = MIN_PITCH_RADS;
   }
 
-  if (tempRot.pos.y > 2 * PHYS_CONST_PI)
-  {
-    tempRot.pos.y -= int(tempRot.pos.y / (2 * PHYS_CONST_PI)) * 2 * PHYS_CONST_PI;
-  }
-  if (tempRot.pos.z > 2 * PHYS_CONST_PI)
-  {
-    tempRot.pos.z -= int(tempRot.pos.z / (2 * PHYS_CONST_PI)) * 2 * PHYS_CONST_PI;
-  }
   setRot(tempRot);
 
   float sinFactor = std::sin(tempRot.pos.y);
@@ -91,13 +83,6 @@ bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, flo
 
   //LOGD("x: %f, vx %f", getPos().pos.x, getVel().pos.x);
   //LOGD("xRot: %f, vXRot %f", getRot().pos.x, getRotVel().pos.x);
-
-  // Temp: prevent from falling through floor
-  if (m_pos.pos.y < PLAYER_HITBOX_H / 2)
-  {
-    m_pos.pos.y = PLAYER_HITBOX_H / 2;
-    m_vel.pos.y = 0;
-  }
 
   return true;
 }

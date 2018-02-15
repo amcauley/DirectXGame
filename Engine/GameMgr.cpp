@@ -46,7 +46,7 @@ bool GameMgr::init(
   // Set up camera
   m_gm.initConstBuffer(dev, devcon);
   m_gm.setPerspective(
-    3.14159 / 2.0f,
+    PHYS_CONST_PI / 2.0f,
     1.0f * m_width / m_height,
     RENDER_NEAR_DIST_M * UNITS_PER_METER,
     RENDER_FAR_DIST_M * UNITS_PER_METER);

@@ -5,6 +5,16 @@
 
 class TestScene : public Scene
 {
+private:
+  // Test Scene named Objects
+  enum NAMED_OBJECTS
+  {
+    TSO_PLAYER = 0,
+    TSO_CAT_TRIANGLE,
+    TSO_CAT_BOX,
+    TSO_FLOOR
+  };
+
 public:
   TestScene();
   bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);

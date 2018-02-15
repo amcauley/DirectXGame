@@ -2,6 +2,7 @@
 #define GAME_SCENE_H
 
 #include "GameObject.h"
+#include <map>
 
 class Scene;
 class GraphicsManager;
@@ -43,7 +44,7 @@ class Scene
 {
 protected:
   SceneType m_type = SCENE_TYPE_NONE;
-  std::vector<GameObject*> m_objs;
+  std::map<uint32_t, GameObject*> m_objs;
 
 public:
   static bool updateScene(

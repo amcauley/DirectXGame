@@ -1,4 +1,5 @@
 #include "AABBControllable.h"
+#include "../../CommonPhysConsts.h"
 #include "../../Logger.h"
 #include "../../Util.h"
 
@@ -64,13 +65,6 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
   float collisionTimeInPastX = 0.0, collisionTimeInPastY = 0.0, collisionTimeInPastZ = 0.0;
 
   //LOGD("Collision, posY %f, velY %f", pPrimaryIo->out.pos.pos.y, pPrimaryIo->out.vel.pos.y);
-
-  // Minimum distance at which past hits will be considered. Keep this small to avoid reacting to
-  // some far away wall. Ex) if we're moving at 1 unit/step, don't react to something 1000 steps behind us.
-  // We would have hit it in the past, but it's too long ago - not relevant to current calcs. Also don't just
-  // use time directly, this was original design and led to gravity slowly sinking player through floor, so
-  // hit in past was too long ago (due to slow velocity) to count.
-  const float MAX_ACTIONABLE_DIST_2 = 0.05;
 
   vel = pPrimaryIo->in.vel.pos.x;
   if (vel != 0)

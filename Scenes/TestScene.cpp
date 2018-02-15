@@ -1,4 +1,5 @@
 #include "TestScene.h"
+#include "../Engine//Logger.h"
 #include "../Engine/CommonPhysConsts.h"
 #include "../Engine/Objects/PolyObj.h"
 #include "../Engine/Objects/DebugOverlay.h"
@@ -16,7 +17,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 {
   ControllableObj *pContObj = new ControllableObj;
   pContObj->init(dev, devcon);
-  m_objs.push_back(pContObj);
+  m_objs[TSO_PLAYER] = pContObj;
 
   TexBox *pBox = NULL;
   PolyObj *pObj = NULL;
@@ -39,25 +40,25 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj->setPModel(new PhysicsModel);
   pObj->getPModel()->setCollisionModel(new AABB(2.0, 2.0, 0.1));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB);
-  m_objs.push_back(pObj);
+  m_objs[TSO_CAT_TRIANGLE] = pObj;
 
 
   pBox = new TexBox;
   // These coords are relative the object's center, currently at the origin.
   pBox->init(
     dev, devcon,
-    0.7, 0.7, 0.7,
+    2.0, 0.5, 2.0,
     std::string("Textures/cat.dds"),
-    2.0, 3.0
+    2.0, 1.0
   );
   pObj = new PolyObj;
   pObj->init(pBox);
   // Now set the global position.
-  pObj->setPos(Pos3(-3.0, 0.35, -5.0));
+  pObj->setPos(Pos3(-3.0, 0.25, -5.0));
   pObj->setPModel(new PhysicsModel);
-  pObj->getPModel()->setCollisionModel(new AABB(1.1, 1.1, 1.1));
+  pObj->getPModel()->setCollisionModel(new AABB(2.2, 0.7, 2.2));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
-  m_objs.push_back(pObj);
+  m_objs[TSO_CAT_BOX] = pObj;
 
 
   // Floor
@@ -72,8 +73,10 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj->init(pBox);
   // Now set the global position.
   pObj->setPos(Pos3(0.0, -0.05, 0.0));
-  m_objs.push_back(pObj);
-
+  pObj->setPModel(new PhysicsModel);
+  pObj->getPModel()->setCollisionModel(new AABB(50, 0.1, 100));
+  pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
+  m_objs[TSO_FLOOR] = pObj;
 
   return true;
 }
@@ -91,7 +94,7 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   static int translateDir = 1;
   const float TEST_MOVEMENT_MPS = 1.0;
 
-  tempPos = m_objs[1]->getPos();
+  tempPos = m_objs[TSO_CAT_TRIANGLE]->getPos();
   tempPos.pos.x += MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * stepsPerFrame * translateDir;
 
   const int translateTimeFrames = 5000;
@@ -100,7 +103,7 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
     translateDir *= -1;
     translateCnt = 0;
   }
-  m_objs[1]->setPos(tempPos);
+  m_objs[TSO_CAT_TRIANGLE]->setPos(tempPos);
 
 
   static long int spinCnt = 0;
@@ -109,7 +112,7 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   const float X_SPIN_SPEED_RAD_PER_STEP = X_SPIN_SPEED_RAD_PER_SEC * SEC_PER_STEP;
   const float Z_SPIN_SPEED_RAD_PER_STEP = Z_SPIN_SPEED_RAD_PER_SEC * SEC_PER_STEP;
 
-  tempRot = m_objs[2]->getRot();
+  tempRot = m_objs[TSO_CAT_BOX]->getRot();
   // Periodicity is short enough that overflow shouldn't be an issue.
   if (++spinCnt >= (2 * PHYS_CONST_PI / X_SPIN_SPEED_RAD_PER_STEP) * (2 * PHYS_CONST_PI / Z_SPIN_SPEED_RAD_PER_STEP))
   {
@@ -117,13 +120,13 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   }
   tempRot.pos.x = X_SPIN_SPEED_RAD_PER_STEP * spinCnt * stepsPerFrame;
   tempRot.pos.z = Z_SPIN_SPEED_RAD_PER_STEP * spinCnt * stepsPerFrame;
-  //m_objs[2]->setRot(tempRot);
+  //m_objs[TSO_CAT_BOX]->setRot(tempRot);
 
   // Camera follows the controllable object (in location 0).
-  tempPos = m_objs[0]->getPos();
+  tempPos = m_objs[TSO_PLAYER]->getPos();
 
   // Camera rotation
-  tempRot               =  m_objs[0]->getRot();
+  tempRot               =  m_objs[TSO_PLAYER]->getRot();
   float upY             =  std::cos(tempRot.pos.x);
   float horizComponent  =  std::sin(tempRot.pos.x);
   float upX             = -horizComponent * std::sin(tempRot.pos.y);
@@ -141,9 +144,10 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   float lookDirX          =  horizComponent * std::sin(tempRot.pos.y);
   float lookDirZ          = -horizComponent * std::cos(tempRot.pos.y);
   sceneIo.camLookAt.pos.x =  tempPos.pos.x + lookDirX;
-  sceneIo.camLookAt.pos.y =  tempPos.pos.y + lookDirY;
+  sceneIo.camLookAt.pos.y =  tempPos.pos.y + EYE_VERT_OFFSET + lookDirY;
   sceneIo.camLookAt.pos.z =  tempPos.pos.z + lookDirZ;
 
+  LOGD("CamY %f, lookDirY %f, lookAtY %f", sceneIo.camEye.pos.y, lookDirY, sceneIo.camLookAt.pos.y);
 
   return Scene::update(dev, devcon, sceneIo);
 
