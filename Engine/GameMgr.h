@@ -10,12 +10,18 @@
 
 class GameMgr
 {
+private:
+  enum GAME_MGR_OBJ_NAMES
+  {
+    GMO_DBG_OVERLAY = 0
+  };
+
 protected:
   static const unsigned int DEFAULT_WIDTH = 960;
   static const unsigned int DEFAULT_HEIGHT = 540;
 
   // Objects without a particular scene. Ex Debug Overlay is persistent across scenes.
-  std::vector<GameObject*> m_objs;
+  std::map<uint32_t, GameObject*> m_objs;
   Scene* m_pActiveScene;
   SceneIo m_sceneIo;
 

@@ -62,6 +62,8 @@ public:
   GameObjectType getType();
 
   uint64_t getUuid();
+
+  void handleCollision(PmModelStorage* pOtherObjStorage);
 };
 
 #endif

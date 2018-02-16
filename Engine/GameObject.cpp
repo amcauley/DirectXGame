@@ -212,3 +212,8 @@ bool GameObject::releaseGameObject(GameObject * pObj)
 
   return false;
 }
+
+void GameObject::handleCollision(PmModelStorage* pOtherObjStorage)
+{
+  //LOGD("Object level collision handling for obj %u", getUuid());
+}

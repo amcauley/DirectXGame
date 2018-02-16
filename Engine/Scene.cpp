@@ -19,6 +19,8 @@ bool Scene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 
 bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
 {
+  //LOGD("~~~~~~~~~~ New Scene Update ~~~~~~~~~~");
+
   if (!sceneIo.pGraphicsMgr)
   {
     LOGE("Null pGraphicsMgr");
@@ -54,9 +56,16 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
   PModelOutput tempPmOut;
   for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    sceneIo.pPhysicsMgr->getResult(it->second->getUuid(), tempPmOut);
+    sceneIo.pPhysicsMgr->getResult(it->second->getUuid(), &tempPmOut);
    
-    ///TODO: run object-level collision handling based on any collisions
+    //LOGD("Handling obj %u", it->second->getUuid());
+
+    // Object and Scene level collision handling.
+    for (auto collIt = tempPmOut.collisionSet.begin(); collIt != tempPmOut.collisionSet.end(); ++collIt)
+    {
+      it->second->handleCollision(*collIt);
+      handleCollision(it->second, &tempPmOut);
+    }
 
     // Assign back to object.
     it->second->setPos(tempPmOut.pos);
@@ -95,6 +104,12 @@ bool Scene::release()
   }
 
   return bSuccess;
+}
+
+
+void Scene::handleCollision(GameObject* obj, PModelOutput *pModelOut)
+{
+  //LOGD("Scene level collision handling for obj %u", obj->getUuid());
 }
 
 

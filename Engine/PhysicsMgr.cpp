@@ -60,6 +60,8 @@ bool PhysicsManager::run(double timeMs)
     }
     else
     {
+      // Clear old collision info.
+      it->second.out.collisionSet.clear();
       ++it;
     }
   }
@@ -91,7 +93,7 @@ bool PhysicsManager::run(double timeMs)
     for (std::map<uint64_t, PmModelStorage>::iterator it = m_registeredModelMap.begin(); it != m_registeredModelMap.end(); ++it)
     {
       // Copy input into output, i.e. NULL operation is default in case processing doesn't do anything (either by choice or mistake).
-      PhysicsModel::prePhysInputToOutputTransfer(it->second.in, it->second.out);
+      PhysicsModel::prePhysInputToOutputTransfer(&it->second.in, &it->second.out);
 
       if (!bSkipProc)
       {
@@ -110,10 +112,16 @@ bool PhysicsManager::run(double timeMs)
         for (; itSecond != m_registeredModelMap.end(); ++itSecond)
         {
           //LOGD("DBG: Checking collision, obj %u and %u", itFirst->first, itSecond->first);
-          if (CollisionModel::modelsCollide(&itFirst->second, &itSecond->second))
+          if (CollisionModel::modelsCollide(&(itFirst->second), &(itSecond->second)))
           {
             //LOGD("DBG: Model collision, obj %u and %u", itFirst->first, itSecond->first);
-            CollisionModel::handleCollision(&itFirst->second, &itSecond->second);
+            CollisionModel::handleCollision(&(itFirst->second), &(itSecond->second));
+
+            // Add each other to the collisions list for later object-level processing.
+            // Set will automatically check that collision info isn't already present,
+            // ex. from a previous step in the same frame processing.
+            itFirst->second.out.collisionSet.insert(&(itSecond->second));
+            itSecond->second.out.collisionSet.insert(&(itFirst->second));
           }
         }
       }
@@ -121,7 +129,7 @@ bool PhysicsManager::run(double timeMs)
       if (!bLastStep)
       {
         // Copy over output into input in case we're running multiple steps.
-        PhysicsModel::interStepOutputToInputTransfer(itFirst->second.out, itFirst->second.in);
+        PhysicsModel::interStepOutputToInputTransfer(&itFirst->second.out, &itFirst->second.in);
       }
       else
       {
@@ -138,7 +146,7 @@ bool PhysicsManager::run(double timeMs)
 }
 
 
-bool PhysicsManager::getResult(uint64_t uuid, PModelOutput &modelOutput)
+bool PhysicsManager::getResult(uint64_t uuid, PModelOutput *pModelOutput)
 {
   std::map<uint64_t, PmModelStorage>::iterator it;
   it = m_registeredModelMap.find(uuid);
@@ -149,6 +157,6 @@ bool PhysicsManager::getResult(uint64_t uuid, PModelOutput &modelOutput)
     return false;
   }
 
-  modelOutput = it->second.out;
+  *pModelOutput = it->second.out;
   return true;
 }

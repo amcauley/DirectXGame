@@ -37,21 +37,21 @@ CollisionModel* PhysicsModel::getCollisionModel()
 
 
 // Transfers outputs from one physics step into the input to the next step. Useful for multiple steps per frame.
-void PhysicsModel::interStepOutputToInputTransfer(PModelOutput &out, PModelInput &in)
+void PhysicsModel::interStepOutputToInputTransfer(PModelOutput *pOut, PModelInput *pIn)
 {
-  in.pos    = out.pos;
-  in.vel    = out.vel;
-  in.rot    = out.rot;
-  in.rotVel = out.rotVel;
+  pIn->pos    = pOut->pos;
+  pIn->vel    = pOut->vel;
+  pIn->rot    = pOut->rot;
+  pIn->rotVel = pOut->rotVel;
 }
 
 // Initialize the output to the input - useful for NULL models in which case we want to just maintain position, rotation, etc.
-void PhysicsModel::prePhysInputToOutputTransfer(PModelInput &in, PModelOutput &out)
+void PhysicsModel::prePhysInputToOutputTransfer(PModelInput *pIn, PModelOutput *pOut)
 {
-  out.pos    = in.pos;
-  out.vel    = in.vel;
-  out.rot    = in.rot;
-  out.rotVel = in.rotVel;
+  pOut->pos    = pIn->pos;
+  pOut->vel    = pIn->vel;
+  pOut->rot    = pIn->rot;
+  pOut->rotVel = pIn->rotVel;
 }
 
 

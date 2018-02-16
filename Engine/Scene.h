@@ -62,6 +62,7 @@ public:
   virtual bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
   virtual bool release();
   virtual bool update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
+  virtual void handleCollision(GameObject* obj, PModelOutput *pModelOut);
 };
 
 #endif

@@ -15,6 +15,7 @@ TestScene::TestScene()
 
 bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 {
+  LOGD("Creating TSO_PLAYER");
   ControllableObj *pContObj = new ControllableObj;
   pContObj->init(dev, devcon);
   m_objs[TSO_PLAYER] = pContObj;
@@ -25,6 +26,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   ///TODO: Add string -> obj ptr map to give names to each object.
 
   // These coords are relative the object's center, currently at the origin.
+  LOGD("Creating TSO_CAT_TRIANGLE");
   std::vector<Pos3Uv2> triVerts =
   { { -1.0f,   0.0f,   0.0f,   0.0f,   0.0f },
     {  1.0f,   1.0f,   0.0f,   1.0f,   0.0f },
@@ -40,9 +42,11 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj->setPModel(new PhysicsModel);
   pObj->getPModel()->setCollisionModel(new AABB(2.0, 2.0, 0.1));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB);
+  pObj->getPModel()->getCollisionModel()->setPos(Pos3(0.0, 0.0001, 0.0));
   m_objs[TSO_CAT_TRIANGLE] = pObj;
 
 
+  LOGD("Creating TSO_CAT_BOX");
   pBox = new TexBox;
   // These coords are relative the object's center, currently at the origin.
   pBox->init(
@@ -56,12 +60,14 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   // Now set the global position.
   pObj->setPos(Pos3(-3.0, 0.25, -5.0));
   pObj->setPModel(new PhysicsModel);
-  pObj->getPModel()->setCollisionModel(new AABB(2.2, 0.7, 2.2));
+  pObj->getPModel()->setCollisionModel(new AABB(2.2, 0.6, 2.2));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
+  pObj->getPModel()->getCollisionModel()->setPos(Pos3(0.0, 0.0999, 0.0));
   m_objs[TSO_CAT_BOX] = pObj;
 
 
   // Floor
+  LOGD("Creating TSO_FLOOR");
   pBox = new TexBox;
   pBox->init(
     dev, devcon,
@@ -146,8 +152,6 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   sceneIo.camLookAt.pos.x =  tempPos.pos.x + lookDirX;
   sceneIo.camLookAt.pos.y =  tempPos.pos.y + EYE_VERT_OFFSET + lookDirY;
   sceneIo.camLookAt.pos.z =  tempPos.pos.z + lookDirZ;
-
-  LOGD("CamY %f, lookDirY %f, lookAtY %f", sceneIo.camEye.pos.y, lookDirY, sceneIo.camLookAt.pos.y);
 
   return Scene::update(dev, devcon, sceneIo);
 

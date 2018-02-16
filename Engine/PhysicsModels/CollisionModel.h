@@ -32,6 +32,7 @@ public:
   static void handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo);
 
   Pos3 getPos();
+  void setPos(Pos3 pos);
 
   // Individual model processing
   virtual void onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo);

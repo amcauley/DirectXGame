@@ -32,6 +32,12 @@ Pos3 CollisionModel::getPos()
 }
 
 
+void CollisionModel::setPos(Pos3 pos)
+{
+  m_pos = pos;
+}
+
+
 bool CollisionModel::modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSecond)
 {
   if (!pFirst || !pSecond) return false;

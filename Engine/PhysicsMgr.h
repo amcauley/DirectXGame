@@ -6,12 +6,13 @@
 #include <map>
 
 
-typedef struct PmModelStorage_
+class PmModelStorage
 {
+public:
   bool          bActive;  // Mark active when registered, cleared after run (so we can remove/reuse entries from model map.
   PModelInput   in;
   PModelOutput  out;
-} PmModelStorage;
+};
 
 class PhysicsManager
 {
@@ -29,7 +30,7 @@ public:
   bool release();
   bool registerModel(uint64_t uuid, PModelInput *pModelInput);
   bool run(double timeMs);
-  bool getResult(uint64_t uuid, PModelOutput &modelOutput);
+  bool getResult(uint64_t uuid, PModelOutput *pModelOutput);
 };
 
 #endif

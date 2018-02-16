@@ -2,37 +2,40 @@
 #define PHYSICS_MODEL_H
 
 #include "CommonTypes.h"
-#include <vector>
+#include <set>
 
 class PhysicsModel;
 class PhysicsUpdateModel;
 class CollisionModel;
+class PmModelStorage;
 
-typedef struct PModelInput_t
+class PModelInput
 {
+public:
   PhysicsModel  *pModel;
   Pos3          pos;      // In units.
   Pos3          vel;      // In units per step.
   Pos3          rot;      // x component is rotation about x axis in radians.
   Pos3          rotVel;   // In radians per step.
 
-  PModelInput_t()
+  PModelInput()
   {
     pModel = NULL;
   }
-} PModelInput;
+};
 
 
-typedef struct PModelOutput_t
+class PModelOutput
 {
+public:
   Pos3  pos;
   Pos3  vel;
   Pos3  rot;
   Pos3  rotVel;
 
-  ///TODO: collision info
-
-} PModelOutput;
+  // Collection of other objects (via their PmModelStorage ptrs) that this object collided with.
+  std::set<PmModelStorage*> collisionSet;
+};
 
 // Base class for physics (including user input) handling.
 class PhysicsModel
@@ -44,8 +47,8 @@ protected:
 public:
   PhysicsModel();
 
-  static void prePhysInputToOutputTransfer(PModelInput &in, PModelOutput &out);
-  static void interStepOutputToInputTransfer(PModelOutput &out, PModelInput &in);
+  static void prePhysInputToOutputTransfer(PModelInput *pIn, PModelOutput *pOut);
+  static void interStepOutputToInputTransfer(PModelOutput *pOut, PModelInput *pIn);
 
   static bool runPuModel(
     PModelInput &pModelInput,

@@ -66,7 +66,7 @@ bool GameMgr::init(
 
   DebugOverlay *pDbgOverlay = new DebugOverlay();
   pDbgOverlay->init(dev, devcon);
-  m_objs.push_back(pDbgOverlay);
+  m_objs[GMO_DBG_OVERLAY] = pDbgOverlay;
 
   return true;
 }
@@ -102,16 +102,16 @@ bool GameMgr::update(
 
   // GameMgr can display some visuals if needed, but won't run the objects physics managers.
   // Physics is handled only within scene updates.
-  for (int i = 0; i < m_objs.size(); ++i)
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    if (!GameObject::updateGameObject(m_objs[i], dev, devcon, m_sceneIo.timeMs, m_sceneIo.input))
+    if (!GameObject::updateGameObject(it->second, dev, devcon, m_sceneIo.timeMs, m_sceneIo.input))
     {
-      LOGE("Failed to update obj [%u], continuing", i);
+      LOGE("Failed to update obj [%u], continuing", it->first);
       return false;
     }
 
-    m_sceneIo.pGraphicsMgr->setPosAndRot(m_objs[i]->getPos(), m_objs[i]->getRot());
-    m_sceneIo.pGraphicsMgr->renderModel(m_objs[i]->getVModel(), dev, devcon);
+    m_sceneIo.pGraphicsMgr->setPosAndRot(it->second->getPos(), it->second->getRot());
+    m_sceneIo.pGraphicsMgr->renderModel(it->second->getVModel(), dev, devcon);
   }
 
   return true;
@@ -121,11 +121,11 @@ bool GameMgr::update(
 bool GameMgr::release()
 {
   bool bSuccess = true;
-  for (int i = 0; i < m_objs.size(); ++i)
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    if (!GameObject::releaseGameObject(m_objs[i]))
+    if (!GameObject::releaseGameObject(it->second))
     {
-      LOGE("Failed to release obj [%u], continuing", i);
+      LOGE("Failed to release obj [%u], continuing", it->first);
       bSuccess = false;
     }
   }
