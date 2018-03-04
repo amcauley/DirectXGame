@@ -6,10 +6,12 @@
 #include "../Engine/Objects/ControllableObj.h"
 #include "../Engine/VisualModels/TexBox.h"
 #include "../Engine/PhysicsModels/CollisionModels/AABB.h"
+#include "../Engine/SoundMgr.h"
 
 TestScene::TestScene()
 {
   m_type = SCENE_TYPE_TEST;
+  m_bgSoundHandle = SOUND_MGR_INVALID_HANDLE;
 }
 
 
@@ -83,6 +85,28 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj->getPModel()->setCollisionModel(new AABB(50, 0.1, 100));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
   m_objs[TSO_FLOOR] = pObj;
+
+  return true;
+}
+
+
+bool TestScene::firstUpdateHandling(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
+{
+  SoundMgr *pSoundMgr = sceneIo.pSoundMgr;
+
+  LOGD("firstUpdatehandling");
+  if (!pSoundMgr)
+  {
+    LOGW("NULL pSoundMgr");
+    return false;
+  }
+
+  if (pSoundMgr->registerSound(
+    std::string("Sounds/Test0_120bpm.wav"),
+    m_bgSoundHandle))
+  {
+    pSoundMgr->playSound(m_bgSoundHandle);
+  }
 
   return true;
 }

@@ -43,6 +43,15 @@ bool GameMgr::init(
     return false;
   }
 
+  if (!m_soundMgr.init(hwnd))
+  {
+    LOGW("Failed to init sound mgr");
+  }
+  else
+  {
+    m_sceneIo.pSoundMgr = &m_soundMgr;
+  }
+
   // Set up camera
   m_gm.initConstBuffer(dev, devcon);
   m_gm.setPerspective(

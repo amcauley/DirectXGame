@@ -4,7 +4,8 @@
 #include "GraphicsManager.h"
 #include "PhysicsMgr.h"
 
-Scene::Scene()
+Scene::Scene():
+  m_bFirstUpdateComplete(false)
 {
 }
 
@@ -31,6 +32,15 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
   {
     LOGE("Null pPhysicsMgr");
     return false;
+  }
+
+  if (!m_bFirstUpdateComplete)
+  {
+    m_bFirstUpdateComplete = true;
+    if (!firstUpdateHandling(dev, devcon, sceneIo))
+    {
+      LOGW("First scene update failed");
+    }
   }
 
   // 1st loop: Register objects with physics manager
@@ -169,4 +179,9 @@ bool Scene::releaseScene(Scene* pScene)
   }
 
   return false;
+}
+
+bool Scene::firstUpdateHandling(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
+{
+  return true;
 }

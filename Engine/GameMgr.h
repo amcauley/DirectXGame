@@ -7,6 +7,7 @@
 #include "GraphicsManager.h"
 #include "PhysicsMgr.h"
 #include "InputMgr.h"
+#include "SoundMgr.h"
 
 class GameMgr
 {
@@ -28,7 +29,8 @@ protected:
   Timing m_timing;
 
   GraphicsManager m_gm;
-  PhysicsManager m_pm;
+  PhysicsManager  m_pm;
+  SoundMgr        m_soundMgr;
 
   InputApi m_inputState;
   InputMgr m_inputMgr;
