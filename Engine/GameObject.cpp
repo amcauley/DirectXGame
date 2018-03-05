@@ -75,7 +75,23 @@ PhysicsModel* GameObject::getPModel()
 
 
 // General purpose update. VisualModels and PhysicsModels are handled by their respective managers separately.
-bool GameObject::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input)
+bool GameObject::update(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float timeMs,
+  InputApi &input,
+  SoundMgr *pSoundMgr)
+{
+  return true;
+}
+
+
+bool GameObject::prelimUpdate(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float timeMs,
+  InputApi &input,
+  SoundMgr *pSoundMgr)
 {
   return true;
 }
@@ -98,7 +114,8 @@ bool GameObject::updateGameObject(
   ID3D11Device *dev,
   ID3D11DeviceContext *devcon,
   float timeMs,
-  InputApi &input)
+  InputApi &input,
+  SoundMgr *pSoundMgr)
 {
   if (!pObj)
   {
@@ -111,15 +128,55 @@ bool GameObject::updateGameObject(
   {
     case GAME_OBJECT_DEBUG_OVERLAY:
     {
-      return static_cast<DebugOverlay*>(pObj)->update(dev, devcon, timeMs, input);
+      return static_cast<DebugOverlay*>(pObj)->update(dev, devcon, timeMs, input, pSoundMgr);
     }
     case GAME_OBJECT_CONTROLLABLE:
     {
-      return static_cast<ControllableObj*>(pObj)->update(dev, devcon, timeMs, input);
+      return static_cast<ControllableObj*>(pObj)->update(dev, devcon, timeMs, input, pSoundMgr);
     }
     case GAME_OBJECT_POLY_OBJ:
     {
-      return static_cast<PolyObj*>(pObj)->update(dev, devcon, timeMs, input);
+      return static_cast<PolyObj*>(pObj)->update(dev, devcon, timeMs, input, pSoundMgr);
+    }
+    default:
+    {
+      LOGE("GameObject type not recognized: %d", gOType);
+      return false;
+    }
+  }
+
+  return false;
+}
+
+
+bool GameObject::prelimUpdateGameObject(
+  GameObject * pObj,
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float timeMs,
+  InputApi &input,
+  SoundMgr *pSoundMgr)
+{
+  if (!pObj)
+  {
+    LOGE("Null pObj");
+    return false;
+  }
+
+  GameObjectType gOType = pObj->getType();
+  switch (gOType)
+  {
+    case GAME_OBJECT_DEBUG_OVERLAY:
+    {
+      return static_cast<DebugOverlay*>(pObj)->prelimUpdate(dev, devcon, timeMs, input, pSoundMgr);
+    }
+    case GAME_OBJECT_CONTROLLABLE:
+    {
+      return static_cast<ControllableObj*>(pObj)->prelimUpdate(dev, devcon, timeMs, input, pSoundMgr);
+    }
+    case GAME_OBJECT_POLY_OBJ:
+    {
+      return static_cast<PolyObj*>(pObj)->prelimUpdate(dev, devcon, timeMs, input, pSoundMgr);
     }
     default:
     {

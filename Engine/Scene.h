@@ -46,13 +46,18 @@ typedef struct SceneIo_
 class Scene
 {
 protected:
-  bool m_bFirstUpdateComplete;
-
   SceneType m_type = SCENE_TYPE_NONE;
   std::map<uint32_t, GameObject*> m_objs;
 
 public:
   static bool updateScene(
+    Scene* pScene,
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    SceneIo &sceneIo);
+
+  // Happens before the first update is called, useful for loading sounds, other resources that'll be used later.
+  static bool prelimUpdateScene(
     Scene* pScene,
     ID3D11Device *dev,
     ID3D11DeviceContext *devcon,
@@ -67,7 +72,7 @@ public:
   virtual bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
   virtual bool release();
   virtual bool update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
-  virtual bool firstUpdateHandling(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
+  virtual bool prelimUpdate(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
   virtual void handleCollision(GameObject* obj, PModelOutput *pModelOut);
 };
 

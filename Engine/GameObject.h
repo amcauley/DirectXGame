@@ -5,6 +5,8 @@
 #include "VisualModel.h"
 #include "PhysicsModel.h"
 
+class SoundMgr;
+
 typedef enum GameObjectType_
 {
   GAME_OBJECT_NONE = 0,
@@ -29,7 +31,23 @@ protected:
   
 public:
   static bool releaseGameObject(GameObject *pObj);
-  static bool updateGameObject(GameObject *pObj, ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input);
+
+  static bool updateGameObject(
+    GameObject *pObj,
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float timeMs,
+    InputApi &input,
+    SoundMgr *pSoundMgr);
+
+  static bool prelimUpdateGameObject(
+    GameObject *pObj,
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float timeMs,
+    InputApi &input,
+    SoundMgr *pSoundMgr);
+
   GameObject();
 
   // GameObject takes ownership of any model passed to it and will free memory accordingly during destructor.
@@ -49,7 +67,19 @@ public:
   virtual bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
 
   // General purpose update. VisualModels and PhysicsModels are handled by their respective managers separately.
-  virtual bool update(ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input);
+  virtual bool update(
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float timeMs,
+    InputApi &input,
+    SoundMgr *pSoundMgr);
+
+  virtual bool prelimUpdate(
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float timeMs,
+    InputApi &input,
+    SoundMgr *pSoundMgr);
 
   // Derived classes should implement their own if they had any special memory allocations.
   virtual bool release();

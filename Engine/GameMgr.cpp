@@ -52,6 +52,11 @@ bool GameMgr::init(
     m_sceneIo.pSoundMgr = &m_soundMgr;
   }
 
+  if (m_pActiveScene)
+  {
+    Scene::prelimUpdateScene(m_pActiveScene, dev, devcon, m_sceneIo);
+  }
+
   // Set up camera
   m_gm.initConstBuffer(dev, devcon);
   m_gm.setPerspective(
@@ -77,7 +82,28 @@ bool GameMgr::init(
   pDbgOverlay->init(dev, devcon);
   m_objs[GMO_DBG_OVERLAY] = pDbgOverlay;
 
+  prelimUpdates(dev, devcon);
   return true;
+}
+
+
+bool GameMgr::prelimUpdates(ID3D11Device *dev, ID3D11DeviceContext *devcon)
+{
+  bool bSuccess = true;
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
+  {
+    if (!GameObject::prelimUpdateGameObject(it->second, dev, devcon, m_sceneIo.timeMs, m_sceneIo.input, m_sceneIo.pSoundMgr))
+    {
+      LOGW("Failed prelim update for GameMgr obj [%u], continuing", it->first);
+      bSuccess = false;
+    }
+    else
+    {
+      LOGD("Ran GameMgr prelim update for obj [%u]", it->first);
+    }
+  }
+
+  return bSuccess;
 }
 
 
@@ -113,7 +139,7 @@ bool GameMgr::update(
   // Physics is handled only within scene updates.
   for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    if (!GameObject::updateGameObject(it->second, dev, devcon, m_sceneIo.timeMs, m_sceneIo.input))
+    if (!GameObject::updateGameObject(it->second, dev, devcon, m_sceneIo.timeMs, m_sceneIo.input, m_sceneIo.pSoundMgr))
     {
       LOGE("Failed to update obj [%u], continuing", it->first);
       return false;

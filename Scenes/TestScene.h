@@ -22,7 +22,7 @@ public:
   TestScene();
   bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
   bool update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
-  bool firstUpdateHandling(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
+  bool prelimUpdate(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
 };
 
 #endif

@@ -1,6 +1,7 @@
 #include "DebugOverlay.h"
 #include "../VisualModels/TexText.h"
 #include "../Logger.h"
+#include "../SoundMgr.h"
 
 DebugOverlay::DebugOverlay()
 {
@@ -39,7 +40,12 @@ bool DebugOverlay::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 }
 
 
-bool DebugOverlay::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input)
+bool DebugOverlay::update(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float timeMs,
+  InputApi &input,
+  SoundMgr *pSoundMgr)
 {
   // Display order: Frame count, FPS
   std::string dbgString;

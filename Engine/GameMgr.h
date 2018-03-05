@@ -50,6 +50,8 @@ public:
     Scene *pStartingScene,
     uint32_t width = DEFAULT_WIDTH,
     uint32_t height = DEFAULT_HEIGHT);
+
+  bool prelimUpdates(ID3D11Device *dev, ID3D11DeviceContext *devcon);
   
   bool update(
     ID3D11Device *dev,

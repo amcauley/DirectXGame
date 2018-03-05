@@ -3,6 +3,7 @@
 #include "../CommonPhysConsts.h"
 #include "../Logger.h"
 #include "../PhysicsModels/CollisionModels/AABBControllable.h"
+#include "../SoundMgr.h"
 #include <cmath>
 
 ControllableObj::ControllableObj()
@@ -24,7 +25,12 @@ bool ControllableObj::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 }
 
 
-bool ControllableObj::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input)
+bool ControllableObj::update(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float timeMs,
+  InputApi &input,
+  SoundMgr *pSoundMgr)
 {
   Pos3 tempVel = getVel();
   const double JUMP_COOLDOWN_MS = 300;

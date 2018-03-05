@@ -4,6 +4,8 @@
 #include "../GameObject.h"
 #include "../Timing.h"
 
+class SoundMgr;
+
 class ControllableObj : public GameObject
 {
 private:
@@ -11,7 +13,12 @@ private:
 public:
   ControllableObj();
   bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
-  bool update(ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input);
+  bool update(
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float timeMs,
+    InputApi &input,
+    SoundMgr *pSoundMgr);
   bool release();
 };
 

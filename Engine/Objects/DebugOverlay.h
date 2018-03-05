@@ -4,6 +4,8 @@
 #include "../GameObject.h"
 #include "../Timing.h"
 
+class SoundMgr;
+
 class DebugOverlay : public GameObject
 {
 private:
@@ -20,7 +22,14 @@ private:
 public:
   DebugOverlay();
   bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
-  bool update(ID3D11Device *dev, ID3D11DeviceContext *devcon, float timeMs, InputApi &input);
+
+  bool update(
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float timeMs,
+    InputApi &input,
+    SoundMgr *pSoundMgr);
+
   bool release();
 };
 

@@ -90,7 +90,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 }
 
 
-bool TestScene::firstUpdateHandling(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
+bool TestScene::prelimUpdate(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
 {
   SoundMgr *pSoundMgr = sceneIo.pSoundMgr;
 

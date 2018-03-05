@@ -4,8 +4,7 @@
 #include "GraphicsManager.h"
 #include "PhysicsMgr.h"
 
-Scene::Scene():
-  m_bFirstUpdateComplete(false)
+Scene::Scene()
 {
 }
 
@@ -32,15 +31,6 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
   {
     LOGE("Null pPhysicsMgr");
     return false;
-  }
-
-  if (!m_bFirstUpdateComplete)
-  {
-    m_bFirstUpdateComplete = true;
-    if (!firstUpdateHandling(dev, devcon, sceneIo))
-    {
-      LOGW("First scene update failed");
-    }
   }
 
   // 1st loop: Register objects with physics manager
@@ -87,7 +77,7 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
   // 3rd loop: (non-physics) update routines and rendering
   for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
   {
-    if (!GameObject::updateGameObject(it->second, dev, devcon, sceneIo.timeMs, sceneIo.input))
+    if (!GameObject::updateGameObject(it->second, dev, devcon, sceneIo.timeMs, sceneIo.input, sceneIo.pSoundMgr))
     {
       LOGE("Failed to update object [%u]", it->first);
       return false;
@@ -181,7 +171,50 @@ bool Scene::releaseScene(Scene* pScene)
   return false;
 }
 
-bool Scene::firstUpdateHandling(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
+
+bool Scene::prelimUpdate(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
 {
+  // Each object belonging to the scene should also run its prelimUpdate processing.
+  bool bSuccess = true;
+  for (auto it = m_objs.begin(); it != m_objs.end(); ++it)
+  {
+    if (!GameObject::prelimUpdateGameObject(it->second, dev, devcon, sceneIo.timeMs, sceneIo.input, sceneIo.pSoundMgr))
+    {
+      LOGW("Prelim update failed for obj [%u], continuing", it->first);
+      bSuccess = false;
+    }
+    else
+    {
+      LOGD("Ran prelim update for obj [%u]", it->first);
+    }
+  }
+
+  return bSuccess;
+}
+
+
+bool Scene::prelimUpdateScene(Scene* pScene, ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo)
+{
+  if (!pScene)
+  {
+    LOGE("Null prelim update scene");
+    return false;
+  }
+
+  int sType = pScene->getType();
+  switch (sType)
+  {
+    case SCENE_TYPE_TEST:
+    {
+      static_cast<TestScene*>(pScene)->prelimUpdate(dev, devcon, sceneIo);
+      return false;
+    }
+    default:
+    {
+      LOGE("Scene type not recognized: %d", sType);
+      return false;
+    }
+  }
+
   return true;
 }
