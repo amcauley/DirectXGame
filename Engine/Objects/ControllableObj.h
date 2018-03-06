@@ -10,15 +10,27 @@ class ControllableObj : public GameObject
 {
 private:
   double m_lastJumpMs;
+  uint32_t m_pingSoundHandle;
+
 public:
   ControllableObj();
+
   bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
+
   bool update(
     ID3D11Device *dev,
     ID3D11DeviceContext *devcon,
     float timeMs,
     InputApi &input,
     SoundMgr *pSoundMgr);
+
+  bool ControllableObj::prelimUpdate(
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float timeMs,
+    InputApi &input,
+    SoundMgr *pSoundMgr);
+
   bool release();
 };
 

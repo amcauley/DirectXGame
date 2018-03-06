@@ -15,6 +15,7 @@ ControllableObj::ControllableObj()
   m_pos.pos.y = PLAYER_HITBOX_H / 2;
   m_pPModel->setPuModel(new GravityModel);
   m_lastJumpMs = 0.0;
+  m_pingSoundHandle = SOUND_MGR_INVALID_HANDLE;
 
   LOGD("GameObject %lu = type %d", static_cast<unsigned long>(m_uuid), m_type);
 }
@@ -22,6 +23,26 @@ ControllableObj::ControllableObj()
 bool ControllableObj::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 {
   return true;
+}
+
+
+bool ControllableObj::prelimUpdate(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float timeMs,
+  InputApi &input,
+  SoundMgr *pSoundMgr)
+{
+  LOGD("prelimUpdate");
+  if (!pSoundMgr)
+  {
+    LOGW("NULL pSoundMgr");
+    return false;
+  }
+
+  return pSoundMgr->registerSound(
+    std::string("Sounds/TestPing.wav"),
+    m_pingSoundHandle);
 }
 
 
@@ -38,6 +59,8 @@ bool ControllableObj::update(
   {
     m_lastJumpMs = timeMs;
     tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+
+    pSoundMgr->playSound(m_pingSoundHandle);
   }
 
   // Handle non-jump movement

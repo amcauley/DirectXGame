@@ -52,7 +52,7 @@ public:
   // then use the handle when issuing commands related to this file, ex. stop, play, etc.
   bool registerSound(std::string filename, uint32_t &handle);
 
-  bool playSound(uint32_t handle);
+  bool playSound(uint32_t handle, bool bLoop=false);
 };
 
 #endif

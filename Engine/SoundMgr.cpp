@@ -282,7 +282,7 @@ bool SoundMgr::registerSound(std::string filename, uint32_t &handle)
 }
 
 
-bool SoundMgr::playSound(uint32_t handle)
+bool SoundMgr::playSound(uint32_t handle, bool bLoop)
 {
   IDirectSoundBuffer8* pBuffer = NULL;
   auto it = m_handleToSoundMap.find(handle);
@@ -312,7 +312,8 @@ bool SoundMgr::playSound(uint32_t handle)
   }
 
   // Play the contents of the secondary sound buffer.
-  if(HR_FAILED(pBuffer->Play(0, 0, DSBPLAY_LOOPING)))
+  DWORD dwFlags = bLoop ? DSBPLAY_LOOPING : 0;
+  if(HR_FAILED(pBuffer->Play(0, 0, dwFlags)))
   {
     return false;
   }
