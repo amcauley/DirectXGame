@@ -4,6 +4,7 @@
 #include "VisualModels/TexPoly.h"
 #include "VisualModels/TexRect.h"
 #include "VisualModels/TexBox.h"
+#include "VisualModels/TexCylinder.h"
 
 VisualModelType VisualModel::getType()
 {
@@ -69,6 +70,11 @@ bool VisualModel::renderVModel(
       static_cast<TexBox*>(pModel)->render(dev, devcon);
       break;
     }
+    case VISUAL_MODEL_TEX_CYLINDER:
+    {
+      static_cast<TexCylinder*>(pModel)->render(dev, devcon);
+      break;
+    }
     case VISUAL_MODEL_TEX_TEXT:
     {
       static_cast<TexText*>(pModel)->render(dev, devcon);
@@ -111,6 +117,10 @@ bool VisualModel::releaseVModel(VisualModel *pModel)
     case VISUAL_MODEL_TEX_RECT:
     {
       return static_cast<TexRect*>(pModel)->release();
+    }
+    case VISUAL_MODEL_TEX_CYLINDER:
+    {
+      return static_cast<TexCylinder*>(pModel)->release();
     }
     case VISUAL_MODEL_TEX_BOX:
     {

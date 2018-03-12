@@ -5,6 +5,7 @@
 #include "../Engine/Objects/DebugOverlay.h"
 #include "../Engine/Objects/ControllableObj.h"
 #include "../Engine/VisualModels/TexBox.h"
+#include "../Engine/VisualModels/TexCylinder.h"
 #include "../Engine/PhysicsModels/CollisionModels/AABB.h"
 #include "../Engine/SoundMgr.h"
 
@@ -24,8 +25,6 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 
   TexBox *pBox = NULL;
   PolyObj *pObj = NULL;
-
-  ///TODO: Add string -> obj ptr map to give names to each object.
 
   // These coords are relative the object's center, currently at the origin.
   LOGD("Creating TSO_CAT_TRIANGLE");
@@ -73,18 +72,36 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pBox = new TexBox;
   pBox->init(
     dev, devcon,
-    50, 0.1, 100,
+    20, 0.1, 20,
     std::string("Textures/TestPattern.dds"),
-    50, 100
+    20, 20
     );
   pObj = new PolyObj;
   pObj->init(pBox);
   // Now set the global position.
   pObj->setPos(Pos3(0.0, -0.05, 0.0));
   pObj->setPModel(new PhysicsModel);
-  pObj->getPModel()->setCollisionModel(new AABB(50, 0.1, 100));
+  pObj->getPModel()->setCollisionModel(new AABB(20, 0.1, 20));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
   m_objs[TSO_FLOOR] = pObj;
+
+
+  // Cylinder
+  LOGD("Creating TSO_CYLINDER");
+  TexCylinder *pCylinder = NULL;
+  pCylinder = new TexCylinder;
+  pCylinder->init(
+    dev, devcon,
+    1.0, 5.0,
+    std::string("Textures/cat.dds"),
+    8,
+    2.0, 3.0);
+  pObj = new PolyObj;
+  pObj->init(pCylinder);
+  // Now set the global position.
+  pObj->setPos(Pos3(-5.0, 0.0, 0.0));
+  m_objs[TSO_CYLINDER] = pObj;
+
 
   return true;
 }
@@ -94,7 +111,7 @@ bool TestScene::prelimUpdate(ID3D11Device *dev, ID3D11DeviceContext *devcon, Sce
 {
   SoundMgr *pSoundMgr = sceneIo.pSoundMgr;
 
-  LOGD("firstUpdatehandling");
+  LOGD("TestScene prelimUpdate");
   if (!pSoundMgr)
   {
     LOGW("NULL pSoundMgr");
@@ -105,10 +122,10 @@ bool TestScene::prelimUpdate(ID3D11Device *dev, ID3D11DeviceContext *devcon, Sce
     std::string("Sounds/Test0_120bpm.wav"),
     m_bgSoundHandle))
   {
-    pSoundMgr->playSound(m_bgSoundHandle);
+    pSoundMgr->playSound(m_bgSoundHandle, true);
   }
 
-  return true;
+  return Scene::prelimUpdate(dev, devcon, sceneIo);
 }
 
 
@@ -180,4 +197,10 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   return Scene::update(dev, devcon, sceneIo);
 
   ///TODO: Get output from collisions and run any scene-specific collision handling
+}
+
+
+void TestScene::handleCollision(GameObject* obj, PModelOutput *pModelOut)
+{
+  //LOGD("TestScene level collision handling for obj %u", obj->getUuid());
 }

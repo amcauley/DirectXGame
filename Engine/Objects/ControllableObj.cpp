@@ -33,7 +33,7 @@ bool ControllableObj::prelimUpdate(
   InputApi &input,
   SoundMgr *pSoundMgr)
 {
-  LOGD("prelimUpdate");
+  LOGD("ControllableObj [%] prelimUpdate", m_uuid);
   if (!pSoundMgr)
   {
     LOGW("NULL pSoundMgr");

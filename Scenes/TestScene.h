@@ -12,7 +12,8 @@ private:
     TSO_PLAYER = 0,
     TSO_CAT_TRIANGLE,
     TSO_CAT_BOX,
-    TSO_FLOOR
+    TSO_FLOOR,
+    TSO_CYLINDER
   };
 
   // Might move to Scene base class eventually...
@@ -23,6 +24,8 @@ public:
   bool init(ID3D11Device *dev, ID3D11DeviceContext *devcon);
   bool update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
   bool prelimUpdate(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &sceneIo);
+
+  void handleCollision(GameObject* obj, PModelOutput *pModelOut);
 };
 
 #endif

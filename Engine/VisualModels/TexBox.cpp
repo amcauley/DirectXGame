@@ -83,6 +83,8 @@ bool TexBox::init(
   triList.push_back(Pos3Uv2(pt6, uv2));
   triList.push_back(Pos3Uv2(pt7, uv3));
 
+  // Default TexPoly init will handle basic storage and init. The render method needs special handling below, though,
+  // since it's a list of 6 separate triangle lists.
   return TexPoly::init(
     dev,
     devcon,
