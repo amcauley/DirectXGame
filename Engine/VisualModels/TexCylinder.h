@@ -5,6 +5,8 @@
 
 class TexCylinder : public TexPoly
 {
+private:
+  uint32_t m_numFaces;
 public:
   TexCylinder();
 
@@ -18,6 +20,11 @@ public:
     float texScaleU = 1.0,
     float texScaleV = 1.0,
     bool bStaticScreenLoc = false);
+
+  void updateLength(
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon,
+    float L);
 };
 
 #endif

@@ -36,6 +36,10 @@ public:
     ID3D11DeviceContext *devcon);
 
   bool release();
+
+  void updatePoints(
+    ID3D11Device *dev,
+    ID3D11DeviceContext *devcon);
 };
 
 #endif

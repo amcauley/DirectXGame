@@ -4,6 +4,7 @@
 
 TexCylinder::TexCylinder()
 {
+  m_numFaces = 0;
   m_type = VISUAL_MODEL_TEX_CYLINDER;
 }
 
@@ -19,16 +20,18 @@ bool TexCylinder::init(
   float texScaleV,
   bool bStaticScreenLoc)
 {
+  m_numFaces = numFaces;
+
   std::vector<Pos3Uv2> triList;
 
   Pos3 pt;
   Pos2 uv;
 
-  float uStep = texScaleU / numFaces;
+  float uStep = texScaleU / m_numFaces;
 
-  float radStep = PHYS_CONST_PI * 2 / numFaces;
+  float radStep = PHYS_CONST_PI * 2 / m_numFaces;
 
-  for (uint32_t face = 0; face < numFaces; face++)
+  for (uint32_t face = 0; face < m_numFaces; face++)
   {
     pt.pos.y = 0.0f;
     pt.pos.x = radius * cos(radStep * face);
@@ -60,5 +63,20 @@ bool TexCylinder::init(
     texFileName,
     triList,
     bStaticScreenLoc);
+}
+
+
+void TexCylinder::updateLength(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  float L)
+{
+  for (uint32_t face = 0; face <= m_numFaces; face++)
+  {
+    // Change the non-zero vertices, i.e. the odd ones (see init method for original vector creation).
+    m_vertices[2 * face + 1].pos.y = L;
+  }
+
+  updatePoints(dev, devcon);
 }
 

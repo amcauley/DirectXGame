@@ -152,6 +152,11 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   }
   m_objs[TSO_CAT_TRIANGLE]->setPos(tempPos);
 
+  static int cylCnt = 0;
+  TexCylinder *pCylinderVModel = static_cast<TexCylinder*>(m_objs[TSO_CYLINDER]->getVModel());
+  const float CYLINDER_GROW_RATE_PER_SEC = 0.2;
+  pCylinderVModel->updateLength(dev, devcon, 1.0 + CYLINDER_GROW_RATE_PER_SEC * SEC_PER_STEP * cylCnt);
+  cylCnt = cylCnt > 40000 / STEP_SIZE_MS ? 0 : cylCnt + 1;
 
   static long int spinCnt = 0;
   const float X_SPIN_SPEED_RAD_PER_SEC = 2 * PHYS_CONST_PI / 100.0;

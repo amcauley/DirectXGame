@@ -4,6 +4,7 @@
 #include "Objects/DebugOverlay.h"
 #include "Objects/PolyObj.h"
 #include "Objects/ControllableObj.h"
+#include "Objects/Hookshot.h"
 
 GameObject::GameObject()
 {
@@ -138,6 +139,10 @@ bool GameObject::updateGameObject(
     {
       return static_cast<PolyObj*>(pObj)->update(dev, devcon, timeMs, input, pSoundMgr);
     }
+    case GAME_OBJECT_HOOKSHOT:
+    {
+      return static_cast<Hookshot*>(pObj)->update(dev, devcon, timeMs, input, pSoundMgr);
+    }
     default:
     {
       LOGE("GameObject type not recognized: %d", gOType);
@@ -177,6 +182,10 @@ bool GameObject::prelimUpdateGameObject(
     case GAME_OBJECT_POLY_OBJ:
     {
       return static_cast<PolyObj*>(pObj)->prelimUpdate(dev, devcon, timeMs, input, pSoundMgr);
+    }
+    case GAME_OBJECT_HOOKSHOT:
+    {
+      return static_cast<Hookshot*>(pObj)->prelimUpdate(dev, devcon, timeMs, input, pSoundMgr);
     }
     default:
     {
@@ -259,6 +268,10 @@ bool GameObject::releaseGameObject(GameObject * pObj)
     case GAME_OBJECT_POLY_OBJ:
     {
       return static_cast<PolyObj*>(pObj)->release();
+    }
+    case GAME_OBJECT_HOOKSHOT:
+    {
+      return static_cast<Hookshot*>(pObj)->release();
     }
     default:
     {

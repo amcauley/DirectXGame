@@ -78,13 +78,21 @@ bool TexPoly::init(
   bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;    // Allow CPU to write in buffer
   dev->CreateBuffer(&bd, NULL, &m_pVBuffer);
 
+  updatePoints(dev, devcon);
+
+  return true;
+}
+
+
+void TexPoly::updatePoints(
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon)
+{
   // Copy the vertices into their buffers.
   D3D11_MAPPED_SUBRESOURCE ms;
   devcon->Map(m_pVBuffer, NULL, D3D11_MAP_WRITE_DISCARD, NULL, &ms);              // map the buffer
   memcpy(ms.pData, m_vertices.data(), m_vertices.size() * sizeof(m_vertices[0])); // copy the data
-  devcon->Unmap(m_pVBuffer, NULL);                                                // unmap the buffer
-
-  return true;
+  devcon->Unmap(m_pVBuffer, NULL);                                                // unmap the buffer  
 }
 
 
