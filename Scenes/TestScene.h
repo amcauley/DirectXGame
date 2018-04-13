@@ -13,7 +13,8 @@ private:
     TSO_CAT_TRIANGLE,
     TSO_CAT_BOX,
     TSO_FLOOR,
-    TSO_CYLINDER
+    TSO_CYLINDER,
+    TSO_HOOKSHOT
   };
 
   // Might move to Scene base class eventually...

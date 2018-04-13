@@ -4,6 +4,7 @@
 #include "../Engine/Objects/PolyObj.h"
 #include "../Engine/Objects/DebugOverlay.h"
 #include "../Engine/Objects/ControllableObj.h"
+#include "../Engine/Objects/Hookshot.h"
 #include "../Engine/VisualModels/TexBox.h"
 #include "../Engine/VisualModels/TexCylinder.h"
 #include "../Engine/PhysicsModels/CollisionModels/AABB.h"
@@ -94,7 +95,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
     dev, devcon,
     1.0, 5.0,
     std::string("Textures/cat.dds"),
-    8,
+    4,
     2.0, 3.0);
   pObj = new PolyObj;
   pObj->init(pCylinder);
@@ -102,6 +103,17 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj->setPos(Pos3(-5.0, 0.0, 0.0));
   m_objs[TSO_CYLINDER] = pObj;
 
+  // Hookshot
+  LOGD("Creating TSO_HOOKSHOT");
+  Hookshot *pHookshot = NULL;
+  pHookshot = new Hookshot;
+  pHookshot->init(
+    dev, devcon,
+    std::string("Textures/cat.dds"),
+    1.0, 0.01);
+  // Now set the global position.
+  pHookshot->setPos(Pos3(5.0, 0.0, 0.0));
+  m_objs[TSO_HOOKSHOT] = pHookshot;
 
   return true;
 }
@@ -157,6 +169,12 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   const float CYLINDER_GROW_RATE_PER_SEC = 0.2;
   pCylinderVModel->updateLength(dev, devcon, 1.0 + CYLINDER_GROW_RATE_PER_SEC * SEC_PER_STEP * cylCnt);
   cylCnt = cylCnt > 40000 / STEP_SIZE_MS ? 0 : cylCnt + 1;
+
+  //static_cast<Hookshot*>(m_objs[TSO_HOOKSHOT])->updateLength(dev, devcon, 2.0 + 100 * CYLINDER_GROW_RATE_PER_SEC * SEC_PER_STEP * cylCnt);
+  //m_objs[TSO_HOOKSHOT]->setRot(Pos3(-PHYS_CONST_PI / 4, -PHYS_CONST_PI / 8, 0));
+  tempPos = m_objs[TSO_PLAYER]->getPos();
+  static_cast<Hookshot*>(m_objs[TSO_HOOKSHOT])->setBasePos(tempPos);
+  static_cast<Hookshot*>(m_objs[TSO_HOOKSHOT])->setHookPos(Pos3(0.0, 3.0, 0.0));
 
   static long int spinCnt = 0;
   const float X_SPIN_SPEED_RAD_PER_SEC = 2 * PHYS_CONST_PI / 100.0;
