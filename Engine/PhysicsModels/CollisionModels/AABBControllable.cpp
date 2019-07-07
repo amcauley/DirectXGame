@@ -42,13 +42,14 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
 {
   // This model checks which face first collided with the corresponding face of the other model's aabb.
   // This assumes that the velocity that caused primary movement is stored in the IO input for primary, i.e.
-  // the physics update model computed the output position was based only on input position and velocity. \
+  // the physics update model computed the output position was based only on input position and velocity.
   // This assumption should hold for GravityModel, but may not for others. Need to be careful to use compatible
   // update/collision models.
 
-  Pos3 primaryPos = pPrimaryIo->in.pos;
-  Pos3 primaryVel = pPrimaryIo->in.vel;
-  Pos3 otherPos = pOtherModelIo->in.pos;
+  // Collision handling is running after first pass physics, so the latest info is in othe out structs.
+  Pos3 primaryPos = pPrimaryIo->out.pos;
+  Pos3 primaryVel = pPrimaryIo->out.vel;
+  Pos3 otherPos = pOtherModelIo->out.pos;
   Pos3 reverseVec;
   float primaryCenterU, primaryCenterV;
   float primaryUWidth, primaryVHeight;
@@ -64,7 +65,10 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
   float distX = 0.0, distY = 0.0, distZ = 0.0;
   float collisionTimeInPastX = 0.0, collisionTimeInPastY = 0.0, collisionTimeInPastZ = 0.0;
 
-  //LOGD("Collision, posY %f, velY %f", pPrimaryIo->out.pos.pos.y, pPrimaryIo->out.vel.pos.y);
+  //LOGD("Primary In posZ %f velZ %f, Secondary In posZ %f, Primary Out posZ %f velZ %f", primaryPos.pos.z, primaryVel.pos.z, otherPos.pos.z, pPrimaryIo->out.pos.pos.z, pPrimaryIo->out.vel.pos.z);
+  //LOGD("Collision Test, posX %f, velX %f", pPrimaryIo->out.pos.pos.x, pPrimaryIo->out.vel.pos.x);
+  //LOGD("Collision Test, posY %f, velY %f", pPrimaryIo->out.pos.pos.y, pPrimaryIo->out.vel.pos.y);
+ // LOGD("Collision Test, posZ %f, velZ %f", pPrimaryIo->out.pos.pos.z, pPrimaryIo->out.vel.pos.z);
 
   vel = pPrimaryIo->in.vel.pos.x;
   if (vel != 0)
@@ -109,7 +113,7 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
     }
   }
 
-  vel = pPrimaryIo->in.vel.pos.y;
+  vel = pPrimaryIo->out.vel.pos.y;
   if (vel != 0)
   {
     // moving top face against stationary bottom face
@@ -153,7 +157,7 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
     }
   }
 
-  vel = pPrimaryIo->in.vel.pos.z;
+  vel = pPrimaryIo->out.vel.pos.z;
   if (vel != 0)
   {
     // moving front face against stationary back face
@@ -201,30 +205,24 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
     return;
   }
 
-  collisionTimeInPastX = bXHit ? collisionTimeInPastX : std::numeric_limits<float>::infinity();
-  collisionTimeInPastY = bYHit ? collisionTimeInPastY : std::numeric_limits<float>::infinity();
-  collisionTimeInPastZ = bZHit ? collisionTimeInPastZ : std::numeric_limits<float>::infinity();
-
-  float minTimeInPast = min(min(collisionTimeInPastX, collisionTimeInPastY), collisionTimeInPastZ);
-
   Pos3 outPos = pPrimaryIo->out.pos;
   Pos3 outVel = pPrimaryIo->out.vel;
 
-  if (minTimeInPast == collisionTimeInPastX)
+  if (bXHit)
   {
-    //LOGD("Hit X");
+    //LOGD("Hit X, vel %f -> 0, pos %f -> %f", outVel.pos.x, outPos.pos.x, outPos.pos.x - distX);
     outVel.pos.x = 0;
     outPos.pos.x -= distX;
   }
-  else if (minTimeInPast == collisionTimeInPastY)
+  if (bYHit)
   {
-    //LOGD("Hit Y, vel %f -> 0, pos %f -> %f, timeInPast %f", outVel.pos.y, outPos.pos.y, outPos.pos.y - distY, minTimeInPast);
+    //LOGD("Hit Y, vel %f -> 0, pos %f -> %f", outVel.pos.y, outPos.pos.y, outPos.pos.y - distY);
     outVel.pos.y = 0;
     outPos.pos.y -= distY;
   }
-  else
+  if (bZHit)
   {
-    //LOGD("Hit Z");
+   //LOGD("Hit Z, vel %f -> 0, pos %f -> %f", outVel.pos.z, outPos.pos.z, outPos.pos.z - distZ);
     outVel.pos.z = 0;
     outPos.pos.z -= distZ;
   }

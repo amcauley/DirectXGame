@@ -32,14 +32,47 @@ bool squaresOverlap(Pos2 &center0, Pos2 &wh0, Pos2 &center1, Pos2 &wh1)
   firstVal = center0.pos.x;
   secondVal = center1.pos.x;
   lowVal = fminf(firstVal, secondVal);
-  if (lowVal == firstVal) intersects = (firstVal + wh0.pos.x / 2 >= secondVal - wh1.pos.x / 2);
-  else intersects = (secondVal + wh1.pos.x / 2 >= firstVal - wh0.pos.x / 2);
+  if (lowVal == firstVal) intersects = (firstVal + wh0.pos.x / 2 > secondVal - wh1.pos.x / 2);
+  else intersects = (secondVal + wh1.pos.x / 2 > firstVal - wh0.pos.x / 2);
   if (!intersects) return false;
 
   firstVal = center0.pos.y;
   secondVal = center1.pos.y;
   lowVal = fminf(firstVal, secondVal);
-  if (lowVal == firstVal) intersects = (firstVal + wh0.pos.y / 2 >= secondVal - wh1.pos.y / 2);
-  else intersects = (secondVal + wh1.pos.y / 2 >= firstVal - wh0.pos.y / 2);
+  if (lowVal == firstVal) intersects = (firstVal + wh0.pos.y / 2 > secondVal - wh1.pos.y / 2);
+  else intersects = (secondVal + wh1.pos.y / 2 > firstVal - wh0.pos.y / 2);
+
+  //if (intersects)
+  //{
+  //  LOGD("Intersection: center0 (%f, %f), width (%f, %f), center1 (%f, %f), width (%f, %f)",
+  //    center0.pos.x,
+  //    center0.pos.y,
+  //    wh0.pos.x,
+  //    wh0.pos.y,
+  //    center1.pos.x,
+  //    center1.pos.y,
+  //    wh1.pos.x,
+  //    wh1.pos.y);
+  //}
+
   return intersects;
 }
+
+// Note: Could probably speed things up slightly by rewriting the checks in 3D, but better to have SPOT, at least for early dev.
+bool cubesOverlap(Pos3 &center0, Pos3 &wh0, Pos3 &center1, Pos3 &wh1)
+{
+  bool bOverlap = squaresOverlap(
+    Pos2(center0.pos.x, center0.pos.y),
+    Pos2(wh0.pos.x, wh0.pos.y),
+    Pos2(center1.pos.x, center1.pos.y),
+    Pos2(wh1.pos.x, wh1.pos.y));
+
+  if (!bOverlap) return false;
+
+  return squaresOverlap(
+    Pos2(center0.pos.x, center0.pos.z),
+    Pos2(wh0.pos.x, wh0.pos.z),
+    Pos2(center1.pos.x, center1.pos.z),
+    Pos2(wh1.pos.x, wh1.pos.z));
+}
+

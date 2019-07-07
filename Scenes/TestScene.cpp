@@ -19,13 +19,21 @@ TestScene::TestScene()
 
 bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 {
+  TexBox *pBox = NULL;
+  PolyObj *pObj = NULL;
+
   LOGD("Creating TSO_PLAYER");
   ControllableObj *pContObj = new ControllableObj;
   pContObj->init(dev, devcon);
+  pBox = new TexBox;
+  pBox->init(
+    dev, devcon,
+    PLAYER_HITBOX_W, PLAYER_HITBOX_H, PLAYER_HITBOX_D,
+    std::string("Textures/cat.dds"),
+    1.0, 1.0
+    );
+  pContObj->setVModel(pBox);
   m_objs[TSO_PLAYER] = pContObj;
-
-  TexBox *pBox = NULL;
-  PolyObj *pObj = NULL;
 
   // These coords are relative the object's center, currently at the origin.
   LOGD("Creating TSO_CAT_TRIANGLE");
@@ -40,7 +48,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
     std::string("Textures/cat.dds"),
     triVerts);
   // Now set the global position.
-  pObj->setPos(Pos3(2.0, 1.0, -5.0));
+  pObj->setPos(Pos3(2.0, 1.0, 0.0));
   pObj->setPModel(new PhysicsModel);
   pObj->getPModel()->setCollisionModel(new AABB(2.0, 2.0, 0.1));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB);
@@ -48,7 +56,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   m_objs[TSO_CAT_TRIANGLE] = pObj;
 
 
-  LOGD("Creating TSO_CAT_BOX");
+  LOGD("Creating TSO_CAT_BOX_1");
   pBox = new TexBox;
   // These coords are relative the object's center, currently at the origin.
   pBox->init(
@@ -60,13 +68,31 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj = new PolyObj;
   pObj->init(pBox);
   // Now set the global position.
-  pObj->setPos(Pos3(-3.0, 0.25, -5.0));
+  pObj->setPos(Pos3(-3.0, 0.0, 0.0));
   pObj->setPModel(new PhysicsModel);
-  pObj->getPModel()->setCollisionModel(new AABB(2.2, 0.6, 2.2));
+  pObj->getPModel()->setCollisionModel(new AABB(2.0, 0.5, 2.0));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
-  pObj->getPModel()->getCollisionModel()->setPos(Pos3(0.0, 0.0999, 0.0));
-  m_objs[TSO_CAT_BOX] = pObj;
+  pObj->getPModel()->getCollisionModel()->setPos(Pos3(0.0, 0.0, 0.0));
+  m_objs[TSO_CAT_BOX_1] = pObj;
 
+  LOGD("Creating TSO_CAT_BOX_2");
+  pBox = new TexBox;
+  // These coords are relative the object's center, currently at the origin.
+  pBox->init(
+    dev, devcon,
+    2.0, 1.5, 2.0,
+    std::string("Textures/cat.dds"),
+    2.0, 1.0
+    );
+  pObj = new PolyObj;
+  pObj->init(pBox);
+  // Now set the global position.
+  pObj->setPos(Pos3(-5.0, 0.0, 0.0));
+  pObj->setPModel(new PhysicsModel);
+  pObj->getPModel()->setCollisionModel(new AABB(2.0, 1.5, 2.0));
+  pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
+  pObj->getPModel()->getCollisionModel()->setPos(Pos3(0.0, 0.0, 0.0));
+  m_objs[TSO_CAT_BOX_2] = pObj;
 
   // Floor
   LOGD("Creating TSO_FLOOR");
@@ -100,20 +126,8 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj = new PolyObj;
   pObj->init(pCylinder);
   // Now set the global position.
-  pObj->setPos(Pos3(-5.0, 0.0, 0.0));
+  pObj->setPos(Pos3(3.0, 0.0, 0.0));
   m_objs[TSO_CYLINDER] = pObj;
-
-  // Hookshot
-  LOGD("Creating TSO_HOOKSHOT");
-  Hookshot *pHookshot = NULL;
-  pHookshot = new Hookshot;
-  pHookshot->init(
-    dev, devcon,
-    std::string("Textures/cat.dds"),
-    1.0, 0.01);
-  // Now set the global position.
-  pHookshot->setPos(Pos3(5.0, 0.0, 0.0));
-  m_objs[TSO_HOOKSHOT] = pHookshot;
 
   return true;
 }
@@ -170,11 +184,10 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   pCylinderVModel->updateLength(dev, devcon, 1.0 + CYLINDER_GROW_RATE_PER_SEC * SEC_PER_STEP * cylCnt);
   cylCnt = cylCnt > 40000 / STEP_SIZE_MS ? 0 : cylCnt + 1;
 
-  //static_cast<Hookshot*>(m_objs[TSO_HOOKSHOT])->updateLength(dev, devcon, 2.0 + 100 * CYLINDER_GROW_RATE_PER_SEC * SEC_PER_STEP * cylCnt);
-  //m_objs[TSO_HOOKSHOT]->setRot(Pos3(-PHYS_CONST_PI / 4, -PHYS_CONST_PI / 8, 0));
-  tempPos = m_objs[TSO_PLAYER]->getPos();
-  static_cast<Hookshot*>(m_objs[TSO_HOOKSHOT])->setBasePos(tempPos);
-  static_cast<Hookshot*>(m_objs[TSO_HOOKSHOT])->setHookPos(Pos3(0.0, 3.0, 0.0));
+  static float boxHeight = 0;
+  const float BOX_HEIGHT_GROW_RATE_PER_SEC = 0.1;
+  boxHeight = boxHeight > 2 ? 0 : boxHeight + BOX_HEIGHT_GROW_RATE_PER_SEC * SEC_PER_STEP;
+  m_objs[TSO_CAT_BOX_2]->setPos(Pos3(-5.0, boxHeight, 0.0));
 
   static long int spinCnt = 0;
   const float X_SPIN_SPEED_RAD_PER_SEC = 2 * PHYS_CONST_PI / 100.0;
@@ -182,7 +195,7 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   const float X_SPIN_SPEED_RAD_PER_STEP = X_SPIN_SPEED_RAD_PER_SEC * SEC_PER_STEP;
   const float Z_SPIN_SPEED_RAD_PER_STEP = Z_SPIN_SPEED_RAD_PER_SEC * SEC_PER_STEP;
 
-  tempRot = m_objs[TSO_CAT_BOX]->getRot();
+  tempRot = m_objs[TSO_CAT_BOX_1]->getRot();
   // Periodicity is short enough that overflow shouldn't be an issue.
   if (++spinCnt >= (2 * PHYS_CONST_PI / X_SPIN_SPEED_RAD_PER_STEP) * (2 * PHYS_CONST_PI / Z_SPIN_SPEED_RAD_PER_STEP))
   {
@@ -190,32 +203,38 @@ bool TestScene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &
   }
   tempRot.pos.x = X_SPIN_SPEED_RAD_PER_STEP * spinCnt * stepsPerFrame;
   tempRot.pos.z = Z_SPIN_SPEED_RAD_PER_STEP * spinCnt * stepsPerFrame;
-  //m_objs[TSO_CAT_BOX]->setRot(tempRot);
+  //m_objs[TSO_CAT_BOX_1]->setRot(tempRot);
 
   // Camera follows the controllable object (in location 0).
   tempPos = m_objs[TSO_PLAYER]->getPos();
 
   // Camera rotation
-  tempRot               =  m_objs[TSO_PLAYER]->getRot();
-  float upY             =  std::cos(tempRot.pos.x);
-  float horizComponent  =  std::sin(tempRot.pos.x);
-  float upX             = -horizComponent * std::sin(tempRot.pos.y);
-  float upZ             =  horizComponent * std::cos(tempRot.pos.y);
-  sceneIo.camUp         =  Pos3(upX, upY, upZ);
+  //tempRot               =  m_objs[TSO_PLAYER]->getRot();
+  //float upY             =  std::cos(tempRot.pos.x);
+  //float horizComponent  =  std::sin(tempRot.pos.x);
+  //float upX             = -horizComponent * std::sin(tempRot.pos.y);
+  //float upZ             =  horizComponent * std::cos(tempRot.pos.y);
+  //sceneIo.camUp         =  Pos3(upX, upY, upZ);
 
   // Camera translation
   sceneIo.camEye.pos.x = tempPos.pos.x;
   sceneIo.camEye.pos.y = tempPos.pos.y + EYE_VERT_OFFSET;
-  sceneIo.camEye.pos.z = tempPos.pos.z;
+  //sceneIo.camEye.pos.z = tempPos.pos.z;
 
   // Camera view direction
-  float lookDirY          =  std::sin(tempRot.pos.x);
-  horizComponent          =  std::cos(tempRot.pos.x);
-  float lookDirX          =  horizComponent * std::sin(tempRot.pos.y);
-  float lookDirZ          = -horizComponent * std::cos(tempRot.pos.y);
-  sceneIo.camLookAt.pos.x =  tempPos.pos.x + lookDirX;
-  sceneIo.camLookAt.pos.y =  tempPos.pos.y + EYE_VERT_OFFSET + lookDirY;
-  sceneIo.camLookAt.pos.z =  tempPos.pos.z + lookDirZ;
+  //float lookDirY          =  std::sin(tempRot.pos.x);
+  //horizComponent          =  std::cos(tempRot.pos.x);
+  //float lookDirX          =  horizComponent * std::sin(tempRot.pos.y);
+  //float lookDirZ          = -horizComponent * std::cos(tempRot.pos.y);
+  //sceneIo.camLookAt.pos.x =  tempPos.pos.x + lookDirX;
+  //sceneIo.camLookAt.pos.y =  tempPos.pos.y + EYE_VERT_OFFSET + lookDirY;
+  //sceneIo.camLookAt.pos.z =  tempPos.pos.z + lookDirZ;
+
+  // 2D-style camera
+  sceneIo.camEye.pos.z = tempPos.pos.z + 5.0;
+  sceneIo.camLookAt.pos.x =  tempPos.pos.x;
+  sceneIo.camLookAt.pos.y =  tempPos.pos.y + EYE_VERT_OFFSET;
+  sceneIo.camLookAt.pos.z =  tempPos.pos.z;
 
   return Scene::update(dev, devcon, sceneIo);
 

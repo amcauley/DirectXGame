@@ -28,7 +28,7 @@
 
 #define GRAVITY_MODEL_G_MPSPS   (-20.0)   // m/s/s
 #define GRAVITY_MODEL_MIN_V_MPS (-40.0)   // m/s  
-#define GRAVITY_MODEL_MAX_V_MPS (999.9)   // m/s
+#define GRAVITY_MODEL_MAX_V_MPS (1000.0)   // m/s
 
 
 // Minimum distance at which past hits will be considered. Keep this small to avoid reacting to

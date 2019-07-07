@@ -11,10 +11,10 @@ private:
   {
     TSO_PLAYER = 0,
     TSO_CAT_TRIANGLE,
-    TSO_CAT_BOX,
     TSO_FLOOR,
     TSO_CYLINDER,
-    TSO_HOOKSHOT
+    TSO_CAT_BOX_1,
+    TSO_CAT_BOX_2,
   };
 
   // Might move to Scene base class eventually...
