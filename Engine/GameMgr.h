@@ -22,6 +22,7 @@ protected:
   static const unsigned int DEFAULT_HEIGHT = 540;
 
   // Objects without a particular scene. Ex Debug Overlay is persistent across scenes.
+  // TODO: Consider moving to ObjectManager framework.
   std::map<uint32_t, GameObject*> m_objs;
   Scene* m_pActiveScene;
   SceneIo m_sceneIo;

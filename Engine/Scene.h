@@ -1,7 +1,7 @@
 #ifndef GAME_SCENE_H
 #define GAME_SCENE_H
 
-#include "GameObject.h"
+#include "ObjectManager.h"
 #include <map>
 
 class Scene;
@@ -36,6 +36,7 @@ typedef struct SceneIo_
   SceneIo_()
   {
     pGraphicsMgr  = NULL;
+    pPhysicsMgr   = NULL;
     pSoundMgr     = NULL;
     pNextScene    = NULL;
   }
@@ -47,7 +48,7 @@ class Scene
 {
 protected:
   SceneType m_type = SCENE_TYPE_NONE;
-  std::map<uint32_t, GameObject*> m_objs;
+  ObjectManager m_objMgr;
 
 public:
   static bool updateScene(

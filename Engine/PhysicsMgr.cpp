@@ -112,6 +112,10 @@ bool PhysicsManager::run(double timeMs)
         for (; itSecond != m_registeredModelMap.end(); ++itSecond)
         {
           //LOGD("DBG: Checking collision, obj %u and %u", itFirst->first, itSecond->first);
+          // TODO: Should run in order of collisions, i.e. handle the first hit, so that any subsequent hits
+          // get handled using the result of the earlier ones.
+          // Note that this doesn't account for any new objects that might be hit due to altered trajectories
+          // from earlier hit handling.
           if (CollisionModel::modelsCollide(&(itFirst->second), &(itSecond->second)))
           {
             //LOGD("DBG: Model collision, obj %u and %u", itFirst->first, itSecond->first);
