@@ -60,7 +60,7 @@ void GraphicsManager::setPosAndRot(Pos3 &pos, Pos3 &pitchYawRoll)
     // Produce and combine the rotation matrices.
     D3DXMatrixRotationX(&MatTemp, pitchYawRoll.pos.x);         // Pitch
     D3DXMatrixMultiply(&MatRot, &MatRot, &MatTemp);
-    D3DXMatrixRotationY(&MatTemp, pitchYawRoll.pos.y);         // Yaw
+    D3DXMatrixRotationY(&MatTemp, -pitchYawRoll.pos.y);        // Yaw
     D3DXMatrixMultiply(&MatRot, &MatRot, &MatTemp);
     D3DXMatrixRotationZ(&MatTemp, pitchYawRoll.pos.z);         // Roll
     D3DXMatrixMultiply(&MatRot, &MatRot, &MatTemp);
