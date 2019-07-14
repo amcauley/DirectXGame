@@ -48,6 +48,11 @@ bool PhysicsManager::registerModel(uint64_t uuid, PModelInput *pModelInput)
   return true;
 }
 
+// Second entry in the input pair is the collision ordering metric.
+bool _collisionCompare(CollisionVectorEntry &i, CollisionVectorEntry &j)
+{
+  return i.second < j.second;
+}
 
 bool PhysicsManager::run(double timeMs)
 {
@@ -61,7 +66,7 @@ bool PhysicsManager::run(double timeMs)
     else
     {
       // Clear old collision info.
-      it->second.out.collisionSet.clear();
+      it->second.out.collisions.clear();
       ++it;
     }
   }
@@ -112,22 +117,31 @@ bool PhysicsManager::run(double timeMs)
         for (; itSecond != m_registeredModelMap.end(); ++itSecond)
         {
           //LOGD("DBG: Checking collision, obj %u and %u", itFirst->first, itSecond->first);
-          // TODO: Should run in order of collisions, i.e. handle the first hit, so that any subsequent hits
+
+          // Should run in order of collisions, i.e. handle the first hit, so that any subsequent hits
           // get handled using the result of the earlier ones.
           // Note that this doesn't account for any new objects that might be hit due to altered trajectories
           // from earlier hit handling.
-          if (CollisionModel::modelsCollide(&(itFirst->second), &(itSecond->second)))
+          OrderingMetric collisionOrderMetric;
+          if (CollisionModel::modelsCollide(&(itFirst->second), &(itSecond->second), &collisionOrderMetric))
           {
             //LOGD("DBG: Model collision, obj %u and %u", itFirst->first, itSecond->first);
-            CollisionModel::handleCollision(&(itFirst->second), &(itSecond->second));
 
             // Add each other to the collisions list for later object-level processing.
             // Set will automatically check that collision info isn't already present,
             // ex. from a previous step in the same frame processing.
-            itFirst->second.out.collisionSet.insert(&(itSecond->second));
-            itSecond->second.out.collisionSet.insert(&(itFirst->second));
+            itFirst->second.out.collisions.push_back(std::make_pair(&(itSecond->second), collisionOrderMetric));
+            itSecond->second.out.collisions.push_back(std::make_pair(&(itFirst->second), collisionOrderMetric));
           }
         }
+      }
+
+      // Sort collisions in time-order.
+      std::sort(itFirst->second.out.collisions.begin(), itFirst->second.out.collisions.end(), _collisionCompare);
+
+      for (auto itColl = itFirst->second.out.collisions.begin(); itColl != itFirst->second.out.collisions.end(); ++itColl)
+      {
+        CollisionModel::handleCollision(&(itFirst->second), itColl->first);
       }
 
       if (!bLastStep)

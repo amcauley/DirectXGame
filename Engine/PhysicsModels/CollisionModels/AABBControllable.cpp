@@ -40,7 +40,7 @@ void AABBControllable::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *p
 
 // Check if objects collide on the (input's) z axis.
 // This calculation makes use of the main objects velocity.
-void _checkHitBasedOnVel(
+void AABBControllable::CheckHitWImmobileBasedOnVel(
   Pos3 &vel,
   Pos3 &mainPos,
   Pos3 &mainPosAabb,
@@ -100,16 +100,72 @@ void _checkHitBasedOnVel(
         Pos2(otherUWidth, otherVHeight)
         );
     }
+    else
+    {
+      // Not considered a collision. Reset collision distance.
+      // Important for, e.g., collision ordering based on distance.
+      distZ = 0.0f;
+    }
   }
 }
 
+
+void AABBControllable::CheckHitsWImmobileBasedOnVel(
+  Pos3 &primaryPos,
+  Pos3 &primaryVel,
+  AABB *pPrimaryAabb,
+  Pos3 &otherPos,
+  AABB *pOtherAabb,
+  bool &bHitX,
+  float &distX,
+  bool &bHitY,
+  float &distY,
+  bool &bHitZ,
+  float &distZ
+  )
+{
+  CheckHitWImmobileBasedOnVel(
+    Pos3(primaryVel.pos.y, primaryVel.pos.z, primaryVel.pos.x),
+    Pos3(primaryPos.pos.y, primaryPos.pos.z, primaryPos.pos.x),
+    Pos3(pPrimaryAabb->getPos().pos.y, pPrimaryAabb->getPos().pos.z, pPrimaryAabb->getPos().pos.x),
+    Pos3(pPrimaryAabb->getDim().pos.y, pPrimaryAabb->getDim().pos.z, pPrimaryAabb->getDim().pos.x),
+    Pos3(otherPos.pos.y, otherPos.pos.z, otherPos.pos.x),
+    Pos3(pOtherAabb->getPos().pos.y, pOtherAabb->getPos().pos.z, pOtherAabb->getPos().pos.x),
+    Pos3(pOtherAabb->getDim().pos.y, pOtherAabb->getDim().pos.z, pOtherAabb->getDim().pos.x),
+    bHitX,
+    distX);
+  
+  CheckHitWImmobileBasedOnVel(
+    Pos3(primaryVel.pos.x, primaryVel.pos.z, primaryVel.pos.y),
+    Pos3(primaryPos.pos.x, primaryPos.pos.z, primaryPos.pos.y),
+    Pos3(pPrimaryAabb->getPos().pos.x, pPrimaryAabb->getPos().pos.z, pPrimaryAabb->getPos().pos.y),
+    Pos3(pPrimaryAabb->getDim().pos.x, pPrimaryAabb->getDim().pos.z, pPrimaryAabb->getDim().pos.y),
+    Pos3(otherPos.pos.x, otherPos.pos.z, otherPos.pos.y),
+    Pos3(pOtherAabb->getPos().pos.x, pOtherAabb->getPos().pos.z, pOtherAabb->getPos().pos.y),
+    Pos3(pOtherAabb->getDim().pos.x, pOtherAabb->getDim().pos.z, pOtherAabb->getDim().pos.y),
+    bHitY,
+    distY);
+  
+  CheckHitWImmobileBasedOnVel(
+    Pos3(primaryVel.pos.x, primaryVel.pos.y, primaryVel.pos.z),
+    Pos3(primaryPos.pos.x, primaryPos.pos.y, primaryPos.pos.z),
+    Pos3(pPrimaryAabb->getPos().pos.x, pPrimaryAabb->getPos().pos.y, pPrimaryAabb->getPos().pos.z),
+    Pos3(pPrimaryAabb->getDim().pos.x, pPrimaryAabb->getDim().pos.y, pPrimaryAabb->getDim().pos.z),
+    Pos3(otherPos.pos.x, otherPos.pos.y, otherPos.pos.z),
+    Pos3(pOtherAabb->getPos().pos.x, pOtherAabb->getPos().pos.y, pOtherAabb->getPos().pos.z),
+    Pos3(pOtherAabb->getDim().pos.x, pOtherAabb->getDim().pos.y, pOtherAabb->getDim().pos.z),
+    bHitZ,
+    distZ);
+}
+
+
 void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo)
 {
-  // This model checks which face first collided with the corresponding face of the other model's aabb.
-  // This assumes that the velocity that caused primary movement is stored in the IO input for primary, i.e.
-  // the physics update model computed the output position was based only on input position and velocity.
-  // This assumption should hold for GravityModel, but may not for others. Need to be careful to use compatible
-  // update/collision models.
+  // Check if the moving AABB collides with a stationary AABB model.
+  // If a collision happens, cancel out any movement that put the model into a collision state.
+  // Use the model's output position/velocity, as this holds the most up-to-date info,
+  // ex. updated if a previous collision altered the trajectory.
+  // Need to be careful to use compatible update/collision models.
 
   // Collision handling is running after first pass physics, so the latest info is in othe out structs.
   Pos3 primaryPos = pPrimaryIo->out.pos;
@@ -127,36 +183,16 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
   //LOGD("Collision Test, posY %f, velY %f", pPrimaryIo->out.pos.pos.y, pPrimaryIo->out.vel.pos.y);
  // LOGD("Collision Test, posZ %f, velZ %f", pPrimaryIo->out.pos.pos.z, pPrimaryIo->out.vel.pos.z);
 
-  _checkHitBasedOnVel(
-    Pos3(primaryVel.pos.y, primaryVel.pos.z, primaryVel.pos.x),
-    Pos3(primaryPos.pos.y, primaryPos.pos.z, primaryPos.pos.x),
-    Pos3(pPrimaryAabb->getPos().pos.y, pPrimaryAabb->getPos().pos.z, pPrimaryAabb->getPos().pos.x),
-    Pos3(pPrimaryAabb->getDim().pos.y, pPrimaryAabb->getDim().pos.z, pPrimaryAabb->getDim().pos.x),
-    Pos3(otherPos.pos.y, otherPos.pos.z, otherPos.pos.x),
-    Pos3(pOtherAabb->getPos().pos.y, pOtherAabb->getPos().pos.z, pOtherAabb->getPos().pos.x),
-    Pos3(pOtherAabb->getDim().pos.y, pOtherAabb->getDim().pos.z, pOtherAabb->getDim().pos.x),
+  CheckHitsWImmobileBasedOnVel(
+    primaryPos,
+    primaryVel,
+    pPrimaryAabb,
+    otherPos,
+    pOtherAabb,
     bHitX,
-    distX);
-
-  _checkHitBasedOnVel(
-    Pos3(primaryVel.pos.x, primaryVel.pos.z, primaryVel.pos.y),
-    Pos3(primaryPos.pos.x, primaryPos.pos.z, primaryPos.pos.y),
-    Pos3(pPrimaryAabb->getPos().pos.x, pPrimaryAabb->getPos().pos.z, pPrimaryAabb->getPos().pos.y),
-    Pos3(pPrimaryAabb->getDim().pos.x, pPrimaryAabb->getDim().pos.z, pPrimaryAabb->getDim().pos.y),
-    Pos3(otherPos.pos.x, otherPos.pos.z, otherPos.pos.y),
-    Pos3(pOtherAabb->getPos().pos.x, pOtherAabb->getPos().pos.z, pOtherAabb->getPos().pos.y),
-    Pos3(pOtherAabb->getDim().pos.x, pOtherAabb->getDim().pos.z, pOtherAabb->getDim().pos.y),
+    distX,
     bHitY,
-    distY);
-
-  _checkHitBasedOnVel(
-    Pos3(primaryVel.pos.x, primaryVel.pos.y, primaryVel.pos.z),
-    Pos3(primaryPos.pos.x, primaryPos.pos.y, primaryPos.pos.z),
-    Pos3(pPrimaryAabb->getPos().pos.x, pPrimaryAabb->getPos().pos.y, pPrimaryAabb->getPos().pos.z),
-    Pos3(pPrimaryAabb->getDim().pos.x, pPrimaryAabb->getDim().pos.y, pPrimaryAabb->getDim().pos.z),
-    Pos3(otherPos.pos.x, otherPos.pos.y, otherPos.pos.z),
-    Pos3(pOtherAabb->getPos().pos.x, pOtherAabb->getPos().pos.y, pOtherAabb->getPos().pos.z),
-    Pos3(pOtherAabb->getDim().pos.x, pOtherAabb->getDim().pos.y, pOtherAabb->getDim().pos.z),
+    distY,
     bHitZ,
     distZ);
 

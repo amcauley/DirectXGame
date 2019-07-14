@@ -12,6 +12,30 @@ public:
   AABBControllable();
   AABBControllable(float w, float h, float d);
 
+  static void CheckHitWImmobileBasedOnVel(
+    Pos3 &vel,
+    Pos3 &mainPos,
+    Pos3 &mainPosAabb,
+    Pos3 &mainDimAabb,
+    Pos3 &otherPos,
+    Pos3 &otherPosAabb,
+    Pos3 &otherDimAabb,
+    bool &bHitZ,
+    float &distZ);
+
+  static void CheckHitsWImmobileBasedOnVel(
+    Pos3 &primaryPos,
+    Pos3 &primaryVel,
+    AABB *pPrimaryAabb,
+    Pos3 &otherPos,
+    AABB *pOtherAabb,
+    bool &bHitX,
+    float &distX,
+    bool &bHitY,
+    float &distY,
+    bool &bHitZ,
+    float &distZ);
+
   virtual void onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo);
 };
 

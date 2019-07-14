@@ -76,3 +76,11 @@ bool cubesOverlap(Pos3 &center0, Pos3 &wh0, Pos3 &center1, Pos3 &wh1)
     Pos2(wh1.pos.x, wh1.pos.z));
 }
 
+// Find the squared distance between two Pos3 points.
+float dist2(Pos3 &first, Pos3 &second)
+{
+  return
+    (first.pos.x - second.pos.x) * (first.pos.x - second.pos.x) +
+    (first.pos.y - second.pos.y) * (first.pos.y - second.pos.y) +
+    (first.pos.z - second.pos.z) * (first.pos.z - second.pos.z);
+}

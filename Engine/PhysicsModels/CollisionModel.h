@@ -25,8 +25,8 @@ protected:
 public:
   static bool releaseCollisionModel(CollisionModel *pModel);
 
-  static bool modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSecond);
-  static bool modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorage *pSecond);
+  static bool modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSecond, OrderingMetric *pCollisionOrderMetric);
+  static bool modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorage *pSecond, OrderingMetric *pCollisionOrderMetric);
 
   // Handle collision between two models.
   static void handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo);

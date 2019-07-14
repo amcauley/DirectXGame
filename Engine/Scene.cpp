@@ -60,10 +60,19 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
    
     //LOGD("Handling obj %u", pObj>getUuid());
 
+    // Default update, ex. for controllable obj even if no collisions happened.
+    pObj->setPos(tempPmOut.pos);
+    pObj->setVel(tempPmOut.vel);
+    pObj->setRot(tempPmOut.rot);
+    pObj->setRotVel(tempPmOut.rotVel);
+
     // Object and Scene level collision handling.
-    for (auto collIt = tempPmOut.collisionSet.begin(); collIt != tempPmOut.collisionSet.end(); ++collIt)
+    for (auto collIt = tempPmOut.collisions.begin(); collIt != tempPmOut.collisions.end(); ++collIt)
     {
-      pObj->handleCollision(*collIt);
+      // Object level handling
+      pObj->handleCollision(collIt->first);
+
+      // Scene level handling
       handleCollision(pObj, &tempPmOut);
 
       // Assign back to object.
@@ -74,12 +83,6 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
       pObj->setRot(tempPmOut.rot);
       pObj->setRotVel(tempPmOut.rotVel);
     }
-
-    //// Assign back to object.
-    //pObj->setPos(tempPmOut.pos);
-    //pObj->setVel(tempPmOut.vel);
-    //pObj->setRot(tempPmOut.rot);
-    //pObj->setRotVel(tempPmOut.rotVel);
   }
 
   // 3rd loop: (non-physics) update routines for visible objects.

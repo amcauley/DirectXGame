@@ -2,11 +2,11 @@
 #define PHYSICS_MODEL_H
 
 #include "CommonTypes.h"
-#include <set>
+#include <vector>
 
+class CollisionModel;
 class PhysicsModel;
 class PhysicsUpdateModel;
-class CollisionModel;
 class PmModelStorage;
 
 class PModelInput
@@ -25,6 +25,8 @@ public:
 };
 
 
+typedef std::pair<PmModelStorage*, OrderingMetric> CollisionVectorEntry;
+
 class PModelOutput
 {
 public:
@@ -34,7 +36,9 @@ public:
   Pos3  rotVel;
 
   // Collection of other objects (via their PmModelStorage ptrs) that this object collided with.
-  std::set<PmModelStorage*> collisionSet;
+  // Collisions should be stored temporally in terms of when the collision happened.
+  // The pair is <pModel, collisionTimeInPastMs>.
+  std::vector<CollisionVectorEntry> collisions;
 };
 
 // Base class for physics (including user input) handling.

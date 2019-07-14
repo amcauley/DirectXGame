@@ -27,4 +27,6 @@ bool HR_FAILED(HRESULT hr);
 bool squaresOverlap(Pos2 &center0, Pos2 &wh0, Pos2 &center1, Pos2 &wh1);
 bool cubesOverlap(Pos3 &center0, Pos3 &wh0, Pos3 &center1, Pos3 &wh1);
 
+float dist2(Pos3 &first, Pos3 &second);
+
 #endif

@@ -39,7 +39,8 @@ void CollisionModel::setPos(Pos3 pos)
 }
 
 
-bool CollisionModel::modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSecond)
+// Check if two models collide, and if so, calculate a metric used for ordering collisions.
+bool CollisionModel::modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSecond, OrderingMetric *pCollisionOrderMetric)
 {
   if (!pFirst || !pSecond) return false;
   if (!pFirst->in.pModel || !pSecond->in.pModel) return false;
@@ -73,7 +74,7 @@ bool CollisionModel::modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSeco
         case COLLISION_MODEL_AABB_IMMOBILE:
         case COLLISION_MODEL_AABB_CONTROLLABLE:
         {
-          bCollision = modelsCollideAabbAabb(pFirst, pSecond);
+          bCollision = modelsCollideAabbAabb(pFirst, pSecond, pCollisionOrderMetric);
           break;
         }
         default:
@@ -95,7 +96,7 @@ bool CollisionModel::modelsCollide(PmModelStorage *pFirst, PmModelStorage *pSeco
 }
 
 
-bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorage *pSecond)
+bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorage *pSecond, OrderingMetric *pCollisionOrderMetric)
 {
   if (!pFirst || !pSecond) return false;
   if (!pFirst->in.pModel || !pSecond->in.pModel) return false;
@@ -105,22 +106,72 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
 
   if (!firstModel || !secondModel) return false;
 
-  Pos3 firstObjPos, secondObjPos, firstBoxPos, secondBoxPos;
+  Pos3 firstObjPos, secondObjPos, firstBoxPos, secondBoxPos, firstObjVel;
 
   firstObjPos = pFirst->out.pos;
+  firstObjVel = pFirst->out.vel;
   secondObjPos = pSecond->out.pos;
 
-  firstBoxPos = static_cast<AABB*>(firstModel)->getPos();
-  secondBoxPos = static_cast<AABB*>(secondModel)->getPos();
+  AABB *pFirstModelAabb = static_cast<AABB*>(firstModel);
+  AABB *pSecondModelAabb = static_cast<AABB*>(secondModel);
 
-  Pos3 firstDim = static_cast<AABB*>(firstModel)->getDim();
-  Pos3 secondDim = static_cast<AABB*>(secondModel)->getDim();
+  // TODO: Implement +/- operator for Pos3
+  firstBoxPos = pFirstModelAabb->getPos();
+  firstBoxPos.pos.x += firstObjPos.pos.x;
+  firstBoxPos.pos.y += firstObjPos.pos.y;
+  firstBoxPos.pos.z += firstObjPos.pos.z;
 
-  return cubesOverlap(
+  secondBoxPos = pSecondModelAabb->getPos();
+  secondBoxPos.pos.x += secondObjPos.pos.x;
+  secondBoxPos.pos.y += secondObjPos.pos.y;
+  secondBoxPos.pos.z += secondObjPos.pos.z;
+
+  Pos3 firstDim = pFirstModelAabb->getDim();
+  Pos3 secondDim = pSecondModelAabb->getDim();
+
+  bool bOverlap = cubesOverlap(
     firstBoxPos,
     firstDim,
     secondBoxPos,
     secondDim);
+
+  // Provide a score for collision ordering based on collision timing (based on velocities).
+  // Smaller collision metrics get processed first, so more negative times, i.e. further in the past, are first.
+  // Tiebreaker is distance between object centers.
+  if (bOverlap)
+  {
+    bool bHitX = false, bHitY = false, bHitZ = false;
+    float distX = 0.0, distY = 0.0, distZ = 0.0;
+
+    AABBControllable::CheckHitsWImmobileBasedOnVel(
+      firstBoxPos,
+      firstObjVel,
+      pFirstModelAabb,
+      secondBoxPos,
+      pSecondModelAabb,
+      bHitX,
+      distX,
+      bHitY,
+      distY,
+      bHitZ,
+      distZ);
+
+    float minDist = 0.0;
+    if (firstObjVel.pos.x != 0.0) minDist = std::fminf(minDist, -distX / firstObjVel.pos.x);
+    if (firstObjVel.pos.y != 0.0) minDist = std::fminf(minDist, -distY / firstObjVel.pos.y);
+    if (firstObjVel.pos.z != 0.0) minDist = std::fminf(minDist, -distZ / firstObjVel.pos.z);
+
+    pCollisionOrderMetric->primary    = minDist;
+    pCollisionOrderMetric->secondary  = dist2(firstBoxPos, secondBoxPos);
+
+    //LOGD("coll w obj at (X,Y) (%f, %f): distX %f Y %f Z %f min %f dist2 %f",
+    //  secondBoxPos.pos.x, secondBoxPos.pos.y,
+    //  distX, distY, distZ,
+    //  minDist,
+    //  pCollisionOrderMetric->secondary);
+  }
+
+  return bOverlap;
 }
 
 // This one should be defined per Collision Model type.
@@ -130,46 +181,32 @@ void CollisionModel::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOt
 }
 
 
+// Handle collision between two models.
+// Only apply the handling to the first model, but not the second.
+// This allows callers to have more control over when models get processed.
 void CollisionModel::handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo)
 {
-  PmModelStorage *pActiveIo = pFirstIo;
-  PmModelStorage *pOtherIo = pSecondIo;
-  CollisionModel *pActiveModel = pActiveIo->in.pModel->getCollisionModel();
-  CollisionModel *pOtherModel = pOtherIo->in.pModel->getCollisionModel();
+  CollisionModel *pActiveModel = pFirstIo->in.pModel->getCollisionModel();
+  CollisionModelType type = pActiveModel->getType();
 
-  for (int i = 0; i < 2; i++)
+  //LOGD("handleCollision activeType %u, otherType %u", type, pOtherModel->getType());
+  switch (type)
   {
-    // Process the other model as active.
-    if (i == 1)
+    case COLLISION_MODEL_AABB:
+    case COLLISION_MODEL_AABB_IMMOBILE:
     {
-      pActiveIo = pSecondIo;
-      pOtherIo = pFirstIo;
-
-      CollisionModel *pTemp = pActiveModel;
-      pActiveModel = pOtherModel;
-      pOtherModel = pTemp;
+      static_cast<AABB*>(pActiveModel)->onCollision(pFirstIo, pSecondIo);
+      break;
     }
-
-    CollisionModelType type = pActiveModel->getType();
-    //LOGD("handleCollision activeType %u, otherType %u", type, pOtherModel->getType());
-    switch (type)
+    case COLLISION_MODEL_AABB_CONTROLLABLE:
     {
-      case COLLISION_MODEL_AABB:
-      case COLLISION_MODEL_AABB_IMMOBILE:
-      {
-        static_cast<AABB*>(pActiveModel)->onCollision(pActiveIo, pOtherIo);
-        break;
-      }
-      case COLLISION_MODEL_AABB_CONTROLLABLE:
-      {
-        static_cast<AABBControllable*>(pActiveModel)->onCollision(pActiveIo, pOtherIo);
-        break;
-      }
-      default:
-      {
-        LOGW("Unexpected collision model %u", type);
-        break;
-      }
+      static_cast<AABBControllable*>(pActiveModel)->onCollision(pFirstIo, pSecondIo);
+      break;
+    }
+    default:
+    {
+      LOGW("Unexpected collision model %u", type);
+      break;
     }
   }
 }

@@ -70,4 +70,28 @@ typedef struct Pos3Uv2_
 
 } Pos3Uv2;
 
+typedef struct OrderingMetric_
+{
+  float primary{ 0.0 };    // Primary metric used for ordering.
+  float secondary{ 0.0 };  // Tiebreaker metric.
+
+  OrderingMetric_()
+  {
+  }
+
+  bool operator< (const OrderingMetric_ &other) const
+  {
+    if (primary < other.primary)
+    {
+      return true;
+    }
+    else if (primary == other.primary)
+    {
+      return secondary < other.secondary;
+    }
+    return false;
+  }
+
+} OrderingMetric;
+
 #endif
