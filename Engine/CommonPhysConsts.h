@@ -39,6 +39,8 @@
 #define  MAX_ACTIONABLE_DIST          (-GRAVITY_MODEL_MIN_V_MPS * MPS_TO_UNITS_PER_STEP + MAX_ACTIONABLE_DIST_PADDING)
 #define  MAX_ACTIONABLE_DIST_2        (MAX_ACTIONABLE_DIST * MAX_ACTIONABLE_DIST)
 
+// Maximum distance used in collision ordering calculations.
+#define MAX_COLLISION_DIST      (RENDER_FAR_DIST_M * UNITS_PER_METER)
 
 #define PLAYER_HITBOX_W         0.5
 #define PLAYER_HITBOX_H         2.0
@@ -46,7 +48,7 @@
 #define EYE_VERT_OFFSET         0.9  // Camera offset above center of player hitbox
 
 
-#define JUMP_VELOCITY_MPS       5.5  // m/s
+#define JUMP_VELOCITY_MPS       10.0  // m/s
 #define MOVEMENT_VEL_MPS        4.0  // m/s
 #define SPRINT_BOOST            1.7  // multiplication factor
 

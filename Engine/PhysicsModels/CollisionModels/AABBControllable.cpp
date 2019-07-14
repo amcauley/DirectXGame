@@ -159,6 +159,85 @@ void AABBControllable::CheckHitsWImmobileBasedOnVel(
 }
 
 
+// Check when a moving AABB is done moving through another AABB.
+// This calculation makes use of the main objects velocity.
+// Result is useful for object collision ordering.
+void AABBControllable::CheckClearWImmobileBasedOnVel(
+  Pos3 &vel,
+  Pos3 &mainPos,
+  Pos3 &mainPosAabb,
+  Pos3 &mainDimAabb,
+  Pos3 &otherPos,
+  Pos3 &otherPosAabb,
+  Pos3 &otherDimAabb,
+  float &clearTimeInFutureZ
+  )
+{
+  float distZ;
+
+  if (vel.pos.z != 0)
+  {
+    // Distance for the forward-moving object's far face to clear the stationary object's far face.
+    if (vel.pos.z > 0)
+    {
+      distZ = (otherPos.pos.z + otherPosAabb.pos.z + otherDimAabb.pos.z / 2) -
+        (mainPos.pos.z + mainPosAabb.pos.z - mainDimAabb.pos.z / 2);
+    }
+    // Distance for the backward-moving object's far face to clear the stationary object's far face.
+    else
+    {
+      distZ = (otherPos.pos.z + otherPosAabb.pos.z - otherDimAabb.pos.z / 2) -
+        (mainPos.pos.z + mainPosAabb.pos.z + mainDimAabb.pos.z / 2);
+    }
+
+    clearTimeInFutureZ = distZ / vel.pos.z;
+  }
+}
+
+
+void AABBControllable::CheckClearsWImmobileBasedOnVel(
+  Pos3 &primaryPos,
+  Pos3 &primaryVel,
+  AABB *pPrimaryAabb,
+  Pos3 &otherPos,
+  AABB *pOtherAabb,
+  float &clearTimeInFutureX,
+  float &clearTimeInFutureY,
+  float &clearTimeInFutureZ
+  )
+{
+  CheckClearWImmobileBasedOnVel(
+    Pos3(primaryVel.pos.y, primaryVel.pos.z, primaryVel.pos.x),
+    Pos3(primaryPos.pos.y, primaryPos.pos.z, primaryPos.pos.x),
+    Pos3(pPrimaryAabb->getPos().pos.y, pPrimaryAabb->getPos().pos.z, pPrimaryAabb->getPos().pos.x),
+    Pos3(pPrimaryAabb->getDim().pos.y, pPrimaryAabb->getDim().pos.z, pPrimaryAabb->getDim().pos.x),
+    Pos3(otherPos.pos.y, otherPos.pos.z, otherPos.pos.x),
+    Pos3(pOtherAabb->getPos().pos.y, pOtherAabb->getPos().pos.z, pOtherAabb->getPos().pos.x),
+    Pos3(pOtherAabb->getDim().pos.y, pOtherAabb->getDim().pos.z, pOtherAabb->getDim().pos.x),
+    clearTimeInFutureX);
+
+  CheckClearWImmobileBasedOnVel(
+    Pos3(primaryVel.pos.x, primaryVel.pos.z, primaryVel.pos.y),
+    Pos3(primaryPos.pos.x, primaryPos.pos.z, primaryPos.pos.y),
+    Pos3(pPrimaryAabb->getPos().pos.x, pPrimaryAabb->getPos().pos.z, pPrimaryAabb->getPos().pos.y),
+    Pos3(pPrimaryAabb->getDim().pos.x, pPrimaryAabb->getDim().pos.z, pPrimaryAabb->getDim().pos.y),
+    Pos3(otherPos.pos.x, otherPos.pos.z, otherPos.pos.y),
+    Pos3(pOtherAabb->getPos().pos.x, pOtherAabb->getPos().pos.z, pOtherAabb->getPos().pos.y),
+    Pos3(pOtherAabb->getDim().pos.x, pOtherAabb->getDim().pos.z, pOtherAabb->getDim().pos.y),
+    clearTimeInFutureY);
+
+  CheckClearWImmobileBasedOnVel(
+    Pos3(primaryVel.pos.x, primaryVel.pos.y, primaryVel.pos.z),
+    Pos3(primaryPos.pos.x, primaryPos.pos.y, primaryPos.pos.z),
+    Pos3(pPrimaryAabb->getPos().pos.x, pPrimaryAabb->getPos().pos.y, pPrimaryAabb->getPos().pos.z),
+    Pos3(pPrimaryAabb->getDim().pos.x, pPrimaryAabb->getDim().pos.y, pPrimaryAabb->getDim().pos.z),
+    Pos3(otherPos.pos.x, otherPos.pos.y, otherPos.pos.z),
+    Pos3(pOtherAabb->getPos().pos.x, pOtherAabb->getPos().pos.y, pOtherAabb->getPos().pos.z),
+    Pos3(pOtherAabb->getDim().pos.x, pOtherAabb->getDim().pos.y, pOtherAabb->getDim().pos.z),
+    clearTimeInFutureZ);
+}
+
+
 void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo)
 {
   // Check if the moving AABB collides with a stationary AABB model.

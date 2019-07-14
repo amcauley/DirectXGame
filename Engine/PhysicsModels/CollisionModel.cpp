@@ -1,4 +1,5 @@
 #include "CollisionModel.h"
+#include "../CommonPhysConsts.h"
 #include "../PhysicsMgr.h"
 #include "../Logger.h"
 #include "CollisionModels/AABB.h"
@@ -161,14 +162,35 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
     if (firstObjVel.pos.y != 0.0) minDist = std::fminf(minDist, -distY / firstObjVel.pos.y);
     if (firstObjVel.pos.z != 0.0) minDist = std::fminf(minDist, -distZ / firstObjVel.pos.z);
 
-    pCollisionOrderMetric->primary    = minDist;
-    pCollisionOrderMetric->secondary  = dist2(firstBoxPos, secondBoxPos);
+    pCollisionOrderMetric->primary = minDist;
 
-    //LOGD("coll w obj at (X,Y) (%f, %f): distX %f Y %f Z %f min %f dist2 %f",
+    float clearTimeInFutureX = 0.0, clearTimeInFutureY = 0.0, clearTimeInFutureZ = 0.0;
+
+    AABBControllable::CheckClearsWImmobileBasedOnVel(
+      firstBoxPos,
+      firstObjVel,
+      pFirstModelAabb,
+      secondBoxPos,
+      pSecondModelAabb,
+      clearTimeInFutureX,
+      clearTimeInFutureY,
+      clearTimeInFutureZ);
+
+    float minClearTime = MAX_COLLISION_DIST;
+    if (firstObjVel.pos.x != 0.0) minClearTime = std::fminf(minClearTime, clearTimeInFutureX);
+    if (firstObjVel.pos.y != 0.0) minClearTime = std::fminf(minClearTime, clearTimeInFutureY);
+    if (firstObjVel.pos.z != 0.0) minClearTime = std::fminf(minClearTime, clearTimeInFutureZ);
+
+    pCollisionOrderMetric->secondary = minClearTime;
+
+    //LOGD("coll w obj at (X,Y) (%f, %f): distX %f Y %f Z %f metric prim %f sec %f (%f %f %f)",
     //  secondBoxPos.pos.x, secondBoxPos.pos.y,
     //  distX, distY, distZ,
-    //  minDist,
-    //  pCollisionOrderMetric->secondary);
+    //  pCollisionOrderMetric->primary,
+    //  pCollisionOrderMetric->secondary,
+    //  clearTimeInFutureX,
+    //  clearTimeInFutureY,
+    //  clearTimeInFutureZ);
   }
 
   return bOverlap;
