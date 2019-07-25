@@ -1,13 +1,36 @@
-import argparse
-import random
 import traceback
+
+BLOCK_SYMBOL_PREFIXES = {
+    '!' :   'size',
+    '.' :   'texture',
+}
+
+# List of prefixes - sorted in order of length of the prefix, to avoid shorter prefix detection (ex. '!')
+# masking longer ones (ex. '!!').
+SORTED_PREFIXES = []
+for prefix, name in BLOCK_SYMBOL_PREFIXES.items():
+    SORTED_PREFIXES.append(prefix)
+SORTED_PREFIXES = sorted(SORTED_PREFIXES, key=lambda k: len(k), reverse=True)
+
+class Symbol:
+    def __init__(self, type=None, settings=None):
+        self.type = type                # Type, ex. 'B' for box.
+        self.settings = settings or {}  # Different settings that could apply to this type, mapped from symbol (ex. '.') to value.
+        for prefix, name in BLOCK_SYMBOL_PREFIXES.items():
+            self.settings.setdefault(prefix)
+
+    def __repr__(self):
+        return "%s(%r)" % (self.__class__, self.__dict__)
+
+    def __eq__(self, other):
+        return (self.type == other.type) and (self.settings == other.settings)
 
 # Stores information about a group of blocks, i.e. a candidate for exporting as a single object.
 # X positions are provided as a block offset from the leftmost column of blocks.
 # Y positions are provided as a block offset from the topmost row of blocks, with more positive values being lower down.
 class GroupInfo:
     def __init__(self, symbol=None, leftX=0, topY=0, dimX=0, dimY=0):
-        self.symbol = symbol    # Number, String, w/e, used to identify the type of block in this group.
+        self.symbol = symbol
         self.leftX = leftX
         self.topY = topY
         self.dimX = dimX
@@ -22,9 +45,27 @@ class MapParser:
         self.reset()
 
     def reset(self):
-        self.activeGroups = set()       # Groups that aren't finalized yet - could still grow.
-        self.exportGroups = set()       # Finalized groups - need to be written to output.
+        self.settingsMap = {}       # Dictionary mapping symbol/identifier strings, (ex. '.1', '!2') to appropriate values (ex. texture path, size, etc.)
+        self.activeGroups = set()   # Groups that aren't finalized yet - could still grow.
+        self.exportGroups = set()   # Finalized groups - need to be written to output.
 
+    # Convert a text file into a condensed set of objects.
+    def MapFileToSet(self, filePath):
+        self.reset()
+        with open(filePath, 'r') as f:
+            for idx, line in enumerate(f):
+                line = line.strip('\n')
+                symbols = self.lineStrToSymbolList(line)
+                print(f'Line {idx}, File Symbols: {symbols}')
+                rowGroups = self.parseLine(symbols, topY=idx)
+                self.updateGroups(rowGroups)
+            # Combine any remaining active groups into the export list.
+            self.exportGroups.update(self.activeGroups)
+            self.activeGroups = set()
+
+        return self.exportGroups
+
+    # Convert a 2D array of symbols into a condensed set.
     def arrayToSet(self, a):
         self.reset()
         for idx, row in enumerate(a):
@@ -37,7 +78,7 @@ class MapParser:
 
         return self.exportGroups
 
-    # Take a set of groups and return an equivalent input array.
+    # Take a set of groups and return an equivalent 2D input array.
     # Return None if an error is encountered.
     def setToArray(self, groups):
         width = 0
@@ -65,15 +106,18 @@ class MapParser:
 
         return array
 
-    # Parse a single line of the input description, provided as a list.
+    # Parse a single line of the input description, provided as a list of symbols.
     def parseLine(self, lineSymbolList, topY=0):
         rowGroups = set()
         activeSymbol = None
         runLen = 0
 
+        if not lineSymbolList:
+            return rowGroups
+
         for idx, symbol in enumerate(lineSymbolList):
             # Form one-dimensional groups of items within this row.
-            if symbol != activeSymbol:
+            if (activeSymbol is None) or (symbol != activeSymbol):
                 if runLen > 0:
                     rowGroups.add(GroupInfo(symbol=activeSymbol, leftX=idx-runLen, dimX=runLen, topY=topY, dimY=1))
                 activeSymbol = symbol
@@ -145,69 +189,47 @@ class MapParser:
         self.activeGroups = newGroups
         #print('activeGroups: {}\nexportGroups: {}'.format(self.activeGroups, self.exportGroups))
 
-def runTests(nRand, seed):
-    ''' Run all unit tests, plus nRand random I/O tests. '''
-    # (Name, Input 2D Array)
-    # Since sets don't have an order, the output sets might change run-to-run, so can't test the set directly.
-    # Instead, verify that the operation is reversible.
-    STANDARD_TESTS = [
-        ('Empty', []),
-        ('OneEntry', [[0]]),
-        ('OneRowSame', [[0, 0]]),
-        ('OneRowDiff', [[1, 2]]),
-        ('OneColumnSame', [[0], [0]]),
-        ('OneColumnDiff', [[3], [1]]),
-        ('2x2Same', [[0, 0], [0,0]]),
-        ('2x2Diff', [[0, 1], [2,3]]),
-        ('2x2Column', [[0,1], [0,2]]),
-        ('3x3Overhang',  [[0, 0, 0], [1, 0, 2], [3, 2, 0]]),
-        ('3x3Underhang',  [[3, 2, 0], [1, 0, 2], [0, 0, 0]])
-    ]
+    # Turn a string of object prefix/values into a list of Symbol objects.
+    def lineStrToSymbolList(self, s):
+        symbols = []
+        s = s.split()
 
-    failures = 0
-    bSuccessTest = True
+        if not s:
+            return symbols
 
-    mp = MapParser()
-    def _runTestIteration(name, input):
-        print('\nRunning Test: {}'.format(name))
-        bSuccessTest = True
-        try:
-            s = mp.arrayToSet(input)
-            l = mp.setToArray(s)
-            bSuccessTest = (l == input)
-            if not bSuccessTest:
-                print('Mismatch: InputArray {}, OutputArray {} (Set {})'.format(input, l, s))
-        except:
-            bSuccessTest = False
-            print('EXCEPTION: {}'.format(traceback.format_exc()))
-        return bSuccessTest
+        # Add any prefix definitions into stored settings.
+        for prefix in SORTED_PREFIXES:
+            if s[0].startswith(prefix):
+                val = s[0][len(prefix):]
+                self.settingsMap[prefix] = val
+                print(f"Discovered prefix: '{prefix}' -> '{val}'")
+                return symbols
 
-    for idx, (name, input) in enumerate(STANDARD_TESTS):
-        failures += 1 if not _runTestIteration(name, input) else 0
+        # Iterate backwards through possible prefixes, taking their different lengths into account.
+        # On any match, store the ending value, cut it off, and continue iterating backwards.
+        # This method ensures that for any prefix match, everything to the right is value, not potential other prefixes.
+        for idx, sym in enumerate(s):
+            #print(f'\nIdx {idx} Symbol: {sym}')
+            newSymbol = Symbol()
+            # Leave at least one character to hold the actual value to set for the prefix.
+            endLen = 1
+            while endLen < len(sym):
+                #print(f'endLen {endLen}, sym {sym}')
+                bMatch = False
+                for prefix in SORTED_PREFIXES:
+                    if sym[:-endLen].endswith(prefix):
+                        newSymbol.settings[prefix] = sym[-endLen:]
+                        sym = sym[:-endLen-len(prefix)]
+                        bMatch = True
+                        break
+                if bMatch:
+                    endLen = 1
+                else:
+                    endLen += 1
+            # Type is whatever's left over after extracting prefix info.
+            newSymbol.type = sym
+            #print(f"Symbol '{s[idx]} -> {newSymbol}")
+            symbols.append(newSymbol)
 
-    # Randomly generated tests.
-    random.seed(seed)
-    for idx in range(nRand):
-        name = 'RandInput_{}'.format(idx)
-        width = random.randint(1,10)
-        height = random.randint(1,10)
-        input = []
-        for h in range(height):
-            input.append([random.randint(0,9) for w in range(width)])
-        failures += 1 if not _runTestIteration(name, input) else 0
-
-    if failures == 0:
-        print('\n\nSUCCESS!')
-    else:
-        print('\n\nFAILURE! ({} TESTS FAILED)'.format(failures))
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Parse block-by-block maps into a simplified format')
-    parser.add_argument('-t', '--test', action='store_true', help='Run sanity tests on parser')
-    DEFAULT_RAND_TESTS = 0
-    parser.add_argument('-n', '--nRand', nargs='?', const=1, type=int, default=DEFAULT_RAND_TESTS, help='Number of random tests to use in unit testing. Default {}.'.format(DEFAULT_RAND_TESTS))
-    parser.add_argument('-s', '--seed', type=int, help='Random seed')
-    args = parser.parse_args()
-
-    if args.test:
-        runTests(args.nRand, args.seed)
+        #print(f'Symbols: {symbols}')
+        return symbols
