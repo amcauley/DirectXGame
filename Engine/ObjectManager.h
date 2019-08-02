@@ -3,6 +3,7 @@
 
 #include "GameObject.h"
 #include <map>
+#include <string>
 
 typedef std::map<uint32_t, GameObject*> ObjectManagerObjMap;
 
@@ -17,6 +18,8 @@ protected:
 public:
   virtual void init();
   virtual bool release();
+
+  void generateFromFile(std::string filename, ID3D11Device *dev, ID3D11DeviceContext *devcon, uint32_t idOffset);
 
   virtual void addObject(uint32_t id, GameObject* pObj);
   virtual GameObject* getObject(uint32_t id);

@@ -10,11 +10,8 @@ private:
   enum NAMED_OBJECTS
   {
     TSO_PLAYER = 0,
-    TSO_CAT_TRIANGLE,
     TSO_FLOOR,
-    TSO_CYLINDER,
-    TSO_CAT_BOX_1,
-    TSO_CAT_BOX_2,
+    NAMED_OBJECTS_COUNT
   };
 
   // Might move to Scene base class eventually...

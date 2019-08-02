@@ -1,8 +1,21 @@
+import argparse
+import sys
 import traceback
 
+LOC_NAME = 'loc'
+LOC_FORMAT = '{x} {y} {z}'
+
+DIM_NAME = 'dim'
+DIM_FORMAT = '{x} {y} {z}'
+
 BLOCK_SYMBOL_PREFIXES = {
-    '!' :   'size',
     '.' :   'texture',
+}
+
+PREFIX_TO_OBJECT_FORMATTING = {
+    '.' :   '',                             # '.' can count as a null-action object identifier, i.e. don't place any object at this location.
+    'B' :   'B {loc} {dim} {texture}\n',    # Block
+    'P' :   'P {loc}\n',                    # Player
 }
 
 # List of prefixes - sorted in order of length of the prefix, to avoid shorter prefix detection (ex. '!')
@@ -46,8 +59,48 @@ class MapParser:
 
     def reset(self):
         self.settingsMap = {}       # Dictionary mapping symbol/identifier strings, (ex. '.1', '!2') to appropriate values (ex. texture path, size, etc.)
+                                    # Mapping is a multi-step process. First, map the prefix (ex. '.') to a dictionary of identifiers (ex. '1', '2', etc.).
+                                    # Each identifier is mapped to the actual value, ex. a texture filepath. '.' -> '1' -> 'PATH_TO_TEXTURE_1'.
+        self.defaultSettings = {}   # Map from prefixes to their default identifier, ex. '.' -> '1'.
         self.activeGroups = set()   # Groups that aren't finalized yet - could still grow.
         self.exportGroups = set()   # Finalized groups - need to be written to output.
+
+    # Convert a text map file into a file containing a set of objects.
+    def MapFileToSetFile(self, inputFilePath, outputFilePath):
+        s = self.MapFileToSet(inputFilePath)
+        with open(outputFilePath, 'w') as f:
+            for group in s:
+                type = group.symbol.type
+                fmt = PREFIX_TO_OBJECT_FORMATTING.get(type)
+                if fmt is None:
+                    print('Unexpected type: {}'.format(type))
+                    continue
+                settingsByName = {}
+                for prefix, identifier in group.symbol.settings.items():
+                    settingsName = BLOCK_SYMBOL_PREFIXES[prefix]
+                    if prefix in self.settingsMap:
+                        if identifier in self.settingsMap[prefix]:
+                            settingsVal = self.settingsMap[prefix][identifier]
+                            settingsByName[settingsName] = settingsVal
+                            continue
+
+                # Location calculations.
+                locX = group.leftX + group.dimX * 0.5
+                locY = -group.topY - group.dimY * 0.5
+                locZ = 0
+
+                loc = LOC_FORMAT.format(x=locX, y=locY, z=locZ)
+                settingsByName[LOC_NAME] = loc
+
+                # Dimensions
+                dimX = group.dimX
+                dimY = group.dimY
+                dimZ = 1.0
+
+                dim = DIM_FORMAT.format(x=dimX, y=dimY, z=dimZ)
+                settingsByName[DIM_NAME] = dim
+
+                f.write('{}'.format(fmt.format(**settingsByName)))
 
     # Convert a text file into a condensed set of objects.
     def MapFileToSet(self, filePath):
@@ -56,7 +109,7 @@ class MapParser:
             for idx, line in enumerate(f):
                 line = line.strip('\n')
                 symbols = self.lineStrToSymbolList(line)
-                print(f'Line {idx}, File Symbols: {symbols}')
+                print('Line {}, File Symbols: {}'.format(idx, symbols))
                 rowGroups = self.parseLine(symbols, topY=idx)
                 self.updateGroups(rowGroups)
             # Combine any remaining active groups into the export list.
@@ -130,7 +183,6 @@ class MapParser:
     # Update active and export groups based on new row group info.
     # Each group can be used in at most one overlap handling routine for simplicity.
     def updateGroups(self, rowGroups):
-        #print('\nupdateGroups\nrowGroups: {}\nactiveGroups: {}'.format(rowGroups, self.activeGroups))
         newGroups = set()
         while rowGroups:
             rowGroup = rowGroups.pop()
@@ -200,21 +252,25 @@ class MapParser:
         # Add any prefix definitions into stored settings.
         for prefix in SORTED_PREFIXES:
             if s[0].startswith(prefix):
-                val = s[0][len(prefix):]
-                self.settingsMap[prefix] = val
-                print(f"Discovered prefix: '{prefix}' -> '{val}'")
+                identifier = s[0][len(prefix):]
+                val = ' '.join(s[1:])
+                identifierMap = self.settingsMap.setdefault(prefix, {})
+                identifierMap[identifier] = val
+                print("Discovered prefix: '{}' -> '{}' -> '{}'".format(prefix, identifier, val))
+
+                # Default identifier = the most recently encountered one.
+                self.defaultSettings[prefix] = identifier
+
                 return symbols
 
         # Iterate backwards through possible prefixes, taking their different lengths into account.
         # On any match, store the ending value, cut it off, and continue iterating backwards.
         # This method ensures that for any prefix match, everything to the right is value, not potential other prefixes.
         for idx, sym in enumerate(s):
-            #print(f'\nIdx {idx} Symbol: {sym}')
             newSymbol = Symbol()
             # Leave at least one character to hold the actual value to set for the prefix.
             endLen = 1
             while endLen < len(sym):
-                #print(f'endLen {endLen}, sym {sym}')
                 bMatch = False
                 for prefix in SORTED_PREFIXES:
                     if sym[:-endLen].endswith(prefix):
@@ -228,8 +284,25 @@ class MapParser:
                     endLen += 1
             # Type is whatever's left over after extracting prefix info.
             newSymbol.type = sym
-            #print(f"Symbol '{s[idx]} -> {newSymbol}")
+
+            for prefix in SORTED_PREFIXES:
+                if newSymbol.settings.get(prefix) is None:
+                    # No specification found, use a default setting.
+                    newSymbol.settings[prefix] = self.defaultSettings.get(prefix)
+
             symbols.append(newSymbol)
 
-        #print(f'Symbols: {symbols}')
         return symbols
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Parse block-by-block maps into a simplified format')
+    parser.add_argument('-i', '--input', help='Parse block-by-block maps into a simplified format')
+    parser.add_argument('-o', '--output', help='Parsed output file')
+    args = parser.parse_args()
+
+    if not all([args.input, args.output]):
+        print("Please provide an input and output file (run with '--help' for details)")
+        sys.exit()
+
+    mp = MapParser()
+    mp.MapFileToSetFile(args.input, args.output)

@@ -1,6 +1,76 @@
+#include <fstream>
+#include <sstream>
+
 #include "Logger.h"
 #include "ObjectManager.h"
+#include "Objects/PolyObj.h"
+#include "VisualModels/TexBox.h"
+#include "PhysicsModels/CollisionModels/AABB.h"
 
+// Read in a file and parse it into a vector of newly allocated objects.
+// Deleting objects once done with them is the responsibility of the caller.
+void ObjectManager::generateFromFile(
+  std::string filename,
+  ID3D11Device *dev,
+  ID3D11DeviceContext *devcon,
+  uint32_t idOffset)
+{
+  std::ifstream fs(filename);
+  std::string curLine;
+
+  if (std::getline(fs, curLine))
+  {
+    LOGI("Parsing file: %s", filename);
+  }
+  else
+  {
+    LOGE("Error reading scene: %s", filename);
+  }
+
+  fs.clear();
+  fs.seekg(0, std::ios::beg);
+
+  int lineCnt = 0;
+
+  /* Start by counting the number of objects. */
+  while (std::getline(fs, curLine))
+  {
+    lineCnt++;
+
+    std::istringstream lineStream(curLine);
+    std::string curWord;
+
+    lineStream >> curWord;
+
+    // TODO: Unify specifications with MapParser.py in a single location (JSON / XML / etc.)
+    if (curWord == "B") // Block: 'B {loc} {dim} {texture}
+    {
+      std::string tex;
+      float locX, locY, locZ, dimX, dimY, dimZ;
+      lineStream >> locX >> locY >> locZ >> dimX >> dimY >> dimZ >> tex;
+      TexBox *pVObj = new TexBox;
+      pVObj->init(
+        dev, devcon,
+        dimX, dimY, dimZ,
+        tex,
+        dimX, dimY);
+
+      PolyObj *pObj = new PolyObj;
+      pObj->init(pVObj);
+      pObj->setPos(Pos3(locX, locY, locZ));
+      pObj->setPModel(new PhysicsModel);
+      pObj->getPModel()->setCollisionModel(new AABB(dimX, dimY, dimZ));
+      pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
+      pObj->getPModel()->getCollisionModel()->setPos(Pos3(0.0, 0.0, 0.0));
+
+      addObject(lineCnt + idOffset, pObj);
+    }
+    else /* Default case: */
+    {
+      continue;
+    }
+  }
+}
 
 void ObjectManager::init()
 {

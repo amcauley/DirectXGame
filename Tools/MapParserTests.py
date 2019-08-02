@@ -71,13 +71,6 @@ class TestSymbols(unittest.TestCase):
                     settings={
                         '.': '1',}),
             ]),
-            ('ABC!1@.HI', [
-                MapParser.Symbol(
-                    type='ABC',
-                    settings={
-                        '.': 'HI',
-                        '!': '1@',}),
-            ]),
             ('A.1 B.2', [
                 MapParser.Symbol(
                     type='A',
@@ -93,7 +86,7 @@ class TestSymbols(unittest.TestCase):
         for i, oExpected in EXPECTED_IO:
             self.mp.reset()
             o = self.mp.lineStrToSymbolList(i)
-            self.assertTrue(o == oExpected, f'Symbol mismatch: expected {oExpected}, actual {o}')
+            self.assertTrue(o == oExpected, 'Symbol mismatch: expected {}, actual {}'.format(oExpected, o))
 
     def test_readFromFile(self):
         print('\nReading Map From File...')
