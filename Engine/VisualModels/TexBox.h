@@ -18,6 +18,7 @@ public:
     std::string &texFileName,
     float texScaleU = 1.0,
     float texScaleV = 1.0,
+    float texScaleW = 0.0,
     bool bStaticScreenLoc = false);
 
   void render(

@@ -53,7 +53,7 @@ void ObjectManager::generateFromFile(
         dev, devcon,
         dimX, dimY, dimZ,
         tex,
-        dimX, dimY);
+        dimX, dimY, dimZ);
 
       PolyObj *pObj = new PolyObj;
       pObj->init(pVObj);

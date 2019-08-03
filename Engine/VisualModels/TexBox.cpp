@@ -16,6 +16,7 @@ bool TexBox::init(
   std::string &texFileName,
   float texScaleU,
   float texScaleV,
+  float texScaleW,
   bool bStaticScreenLoc)
 {
   float halfWidth = width * 0.5;
@@ -40,48 +41,60 @@ bool TexBox::init(
   Pos3 pt6(-halfWidth, -halfHeight, -halfDepth);
   Pos3 pt7( halfWidth, -halfHeight, -halfDepth);
 
-  Pos2 uv0(0.0, 0.0);
+  Pos2 origin(0.0, 0.0);
+
   Pos2 uv1(texScaleU, 0.0);
   Pos2 uv2(0.0, texScaleV);
   Pos2 uv3(texScaleU, texScaleV);
 
+  // Default to basic UV-only faces if W isn't specified.
+  texScaleW = texScaleW == 0 ? texScaleV : texScaleW;
+
+  Pos2 uw1(texScaleU, 0.0);
+  Pos2 uw2(0.0, texScaleW);
+  Pos2 uw3(texScaleU, texScaleW);
+
+  Pos2 wv1(texScaleW, 0.0);
+  Pos2 wv2(0.0, texScaleV);
+  Pos2 wv3(texScaleW, texScaleV);
+
   std::vector<Pos3Uv2> triList;
   
   // Front face
-  triList.push_back(Pos3Uv2(pt0, uv0));
+  triList.push_back(Pos3Uv2(pt0, origin));
   triList.push_back(Pos3Uv2(pt1, uv1));
   triList.push_back(Pos3Uv2(pt2, uv2));
   triList.push_back(Pos3Uv2(pt3, uv3));
 
   // Back face
-  triList.push_back(Pos3Uv2(pt5, uv0));
+  triList.push_back(Pos3Uv2(pt5, origin));
   triList.push_back(Pos3Uv2(pt4, uv1));
   triList.push_back(Pos3Uv2(pt7, uv2));
   triList.push_back(Pos3Uv2(pt6, uv3));
 
   // Right face
-  triList.push_back(Pos3Uv2(pt1, uv0));
-  triList.push_back(Pos3Uv2(pt5, uv1));
-  triList.push_back(Pos3Uv2(pt3, uv2));
-  triList.push_back(Pos3Uv2(pt7, uv3));
+  triList.push_back(Pos3Uv2(pt1, origin));
+  triList.push_back(Pos3Uv2(pt5, wv1));
+  triList.push_back(Pos3Uv2(pt3, wv2));
+  triList.push_back(Pos3Uv2(pt7, wv3));
 
   // Left face
-  triList.push_back(Pos3Uv2(pt4, uv0));
-  triList.push_back(Pos3Uv2(pt0, uv1));
-  triList.push_back(Pos3Uv2(pt6, uv2));
-  triList.push_back(Pos3Uv2(pt2, uv3));
+  triList.push_back(Pos3Uv2(pt4, origin));
+  triList.push_back(Pos3Uv2(pt0, wv1));
+  triList.push_back(Pos3Uv2(pt6, wv2));
+  triList.push_back(Pos3Uv2(pt2, wv3));
 
   // Top face
-  triList.push_back(Pos3Uv2(pt4, uv0));
-  triList.push_back(Pos3Uv2(pt5, uv1));
-  triList.push_back(Pos3Uv2(pt0, uv2));
-  triList.push_back(Pos3Uv2(pt1, uv3));
+  triList.push_back(Pos3Uv2(pt4, origin));
+  triList.push_back(Pos3Uv2(pt5, uw1));
+  triList.push_back(Pos3Uv2(pt0, uw2));
+  triList.push_back(Pos3Uv2(pt1, uw3));
 
   // Bottom face
-  triList.push_back(Pos3Uv2(pt2, uv0));
-  triList.push_back(Pos3Uv2(pt3, uv1));
-  triList.push_back(Pos3Uv2(pt6, uv2));
-  triList.push_back(Pos3Uv2(pt7, uv3));
+  triList.push_back(Pos3Uv2(pt2, origin));
+  triList.push_back(Pos3Uv2(pt3, uw1));
+  triList.push_back(Pos3Uv2(pt6, uw2));
+  triList.push_back(Pos3Uv2(pt7, uw3));
 
   // Default TexPoly init will handle basic storage and init. The render method needs special handling below, though,
   // since it's a list of 6 separate triangle lists.
