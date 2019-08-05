@@ -19,7 +19,7 @@ AABBControllable::AABBControllable(float w, float h, float d)
 }
 
 
-void AABBControllable::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo)
+void AABBControllable::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo, int cnt)
 {
   CollisionModelType otherType = pOtherModelIo->in.pModel->getCollisionModel()->getType();
   //LOGD("AABBControllable onCollision with type %u", otherType);
@@ -27,7 +27,7 @@ void AABBControllable::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *p
   {
     case COLLISION_MODEL_AABB_IMMOBILE:
     {
-      onCollisionWithAabbImmobile(pPrimaryIo, pOtherModelIo);
+      onCollisionWithAabbImmobile(pPrimaryIo, pOtherModelIo, cnt);
       break;
     }
     default:
@@ -238,7 +238,7 @@ void AABBControllable::CheckClearsWImmobileBasedOnVel(
 }
 
 
-void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo)
+void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo, int cnt)
 {
   // Check if the moving AABB collides with a stationary AABB model.
   // If a collision happens, cancel out any movement that put the model into a collision state.
@@ -295,6 +295,13 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
     //LOGD("Hit Y, vel %f -> 0, pos %f -> %f", outVel.pos.y, outPos.pos.y, outPos.pos.y - distY);
     outVel.pos.y = 0;
     outPos.pos.y -= distY;
+
+    // A controllable object can jump if it's colliding with a fixed box beneath it and that object is
+    // the first time-wise collision.
+    if ((cnt == 0) && (distY < 0))
+    {
+      setJumpEn(true);
+    }
   }
   if (bHitZ)
   {
@@ -306,4 +313,16 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
   // Write out updated location/velocity.
   pPrimaryIo->out.pos = outPos;
   pPrimaryIo->out.vel = outVel;
+}
+
+
+void AABBControllable::setJumpEn(bool bJumpEn)
+{
+  m_bJumpEn = bJumpEn;
+}
+
+
+bool AABBControllable::getJumpEn()
+{
+  return m_bJumpEn;
 }

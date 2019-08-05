@@ -2,8 +2,6 @@
 #include "../Engine//Logger.h"
 #include "../Engine/CommonPhysConsts.h"
 #include "../Engine/Objects/PolyObj.h"
-#include "../Engine/Objects/DebugOverlay.h"
-#include "../Engine/Objects/ControllableObj.h"
 #include "../Engine/VisualModels/TexBox.h"
 #include "../Engine/VisualModels/TexCylinder.h"
 #include "../Engine/PhysicsModels/CollisionModels/AABB.h"
@@ -21,19 +19,6 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   TexBox *pBox = NULL;
   PolyObj *pObj = NULL;
 
-  LOGD("Creating TSO_PLAYER");
-  ControllableObj *pContObj = new ControllableObj;
-  pContObj->init(dev, devcon);
-  pBox = new TexBox;
-  pBox->init(
-    dev, devcon,
-    PLAYER_HITBOX_W, PLAYER_HITBOX_H, PLAYER_HITBOX_D,
-    std::string("Textures/cat.dds"),
-    1.0, 1.0
-    );
-  pContObj->setVModel(pBox);
-  m_objMgr.addObject(TSO_PLAYER, pContObj);
-
   // Floor
   LOGD("Creating TSO_FLOOR");
   pBox = new TexBox;
@@ -46,7 +31,7 @@ bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
   pObj = new PolyObj;
   pObj->init(pBox);
   // Now set the global position.
-  pObj->setPos(Pos3(0.0, -5.0, 0.0));
+  pObj->setPos(Pos3(0.0, -9.0, 0.0));
   pObj->setPModel(new PhysicsModel);
   pObj->getPModel()->setCollisionModel(new AABB(20, 0.1, 20));
   pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);

@@ -29,13 +29,13 @@ public:
   static bool modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorage *pSecond, OrderingMetric *pCollisionOrderMetric);
 
   // Handle collision between two models.
-  static void handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo);
+  static void handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo, int cnt);
 
   Pos3 getPos();
   void setPos(Pos3 pos);
 
   // Individual model processing
-  virtual void onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo);
+  virtual void onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo, int cnt);
 
   CollisionModel();
   CollisionModelType getType();

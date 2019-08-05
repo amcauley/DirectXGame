@@ -1,8 +1,10 @@
 #include <fstream>
 #include <sstream>
 
+#include "CommonPhysConsts.h"
 #include "Logger.h"
 #include "ObjectManager.h"
+#include "Objects/ControllableObj.h"
 #include "Objects/PolyObj.h"
 #include "VisualModels/TexBox.h"
 #include "PhysicsModels/CollisionModels/AABB.h"
@@ -20,11 +22,11 @@ void ObjectManager::generateFromFile(
 
   if (std::getline(fs, curLine))
   {
-    LOGI("Parsing file: %s", filename);
+    LOGI("Parsing file: %s", filename.c_str());
   }
   else
   {
-    LOGE("Error reading scene: %s", filename);
+    LOGE("Error reading scene: %s", filename.c_str());
   }
 
   fs.clear();
@@ -43,11 +45,33 @@ void ObjectManager::generateFromFile(
     lineStream >> curWord;
 
     // TODO: Unify specifications with MapParser.py in a single location (JSON / XML / etc.)
-    if (curWord == "B") // Block: 'B {loc} {dim} {texture}
+    if ("P" == curWord) // Player: 'P {loc}'
+    {
+      float locX, locY, locZ;
+      lineStream >> locX >> locY >> locZ;
+      LOGI("Initializing player at (%f, %f, %f)", locX, locY, locZ);
+
+      TexBox *pVObj = new TexBox;
+      pVObj->init(
+        dev, devcon,
+        PLAYER_HITBOX_W, PLAYER_HITBOX_H, PLAYER_HITBOX_D,
+        std::string("Textures/cat.dds")
+        );
+
+      ControllableObj *pObj = new ControllableObj;
+      pObj->init(dev, devcon);
+      pObj->setPos(Pos3(locX, locY, locZ));
+      pObj->setVModel(pVObj);
+
+      // Player object is ID 0 by default.
+      addObject(0, pObj);
+    }
+    if ("B" == curWord) // Block: 'B {loc} {dim} {texture}'
     {
       std::string tex;
       float locX, locY, locZ, dimX, dimY, dimZ;
       lineStream >> locX >> locY >> locZ >> dimX >> dimY >> dimZ >> tex;
+
       TexBox *pVObj = new TexBox;
       pVObj->init(
         dev, devcon,

@@ -67,12 +67,14 @@ bool Scene::update(ID3D11Device *dev, ID3D11DeviceContext *devcon, SceneIo &scen
     pObj->setRotVel(tempPmOut.rotVel);
 
     // Object and Scene level collision handling.
+    int cnt = 0;
     for (auto collIt = tempPmOut.collisions.begin(); collIt != tempPmOut.collisions.end(); ++collIt)
     {
       // Object level handling
-      pObj->handleCollision(collIt->first);
+      pObj->handleCollision(collIt->first, cnt++);
 
       // Scene level handling
+      // Leaving out cnt for now - overall object order within a scene isn't well-definined, so collision ordering only has meaning within a particular object, not a scene-wide level.
       handleCollision(pObj, &tempPmOut);
 
       // Assign back to object.

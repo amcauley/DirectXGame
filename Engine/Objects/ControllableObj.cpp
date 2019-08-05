@@ -55,13 +55,18 @@ bool ControllableObj::update(
 {
   Pos3 tempVel = getVel();
   const double JUMP_COOLDOWN_MS = 300;
-  if ((input.bSpace) && (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS))
+  if ((input.bSpace) &&
+      (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS) &&
+      static_cast<AABBControllable*>(m_pPModel->getCollisionModel())->getJumpEn())
   {
     m_lastJumpMs = timeMs;
     tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
 
     pSoundMgr->playSound(m_pingSoundHandle);
   }
+
+  // Need to explicitly reset jump flag - it's set in the physics collision model, but cleared by the object.
+  static_cast<AABBControllable*>(m_pPModel->getCollisionModel())->setJumpEn(false);
 
   // Handle non-jump movement
   float velUp = input.keyUp;

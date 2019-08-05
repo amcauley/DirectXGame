@@ -94,7 +94,7 @@ public:
 
   uint64_t getUuid();
 
-  void handleCollision(PmModelStorage* pOtherObjStorage);
+  void handleCollision(PmModelStorage* pOtherObjStorage, int cnt);
 };
 
 #endif

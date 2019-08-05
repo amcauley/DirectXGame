@@ -157,12 +157,12 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
       bHitZ,
       distZ);
 
-    float minDist = 0.0;
-    if (firstObjVel.pos.x != 0.0) minDist = std::fminf(minDist, -distX / firstObjVel.pos.x);
-    if (firstObjVel.pos.y != 0.0) minDist = std::fminf(minDist, -distY / firstObjVel.pos.y);
-    if (firstObjVel.pos.z != 0.0) minDist = std::fminf(minDist, -distZ / firstObjVel.pos.z);
+    float timeInPast = 0.0;
+    if (firstObjVel.pos.x != 0.0) timeInPast = std::fminf(timeInPast, -distX / firstObjVel.pos.x);
+    if (firstObjVel.pos.y != 0.0) timeInPast = std::fminf(timeInPast, -distY / firstObjVel.pos.y);
+    if (firstObjVel.pos.z != 0.0) timeInPast = std::fminf(timeInPast, -distZ / firstObjVel.pos.z);
 
-    pCollisionOrderMetric->primary = minDist;
+    pCollisionOrderMetric->primary = timeInPast;
 
     float clearTimeInFutureX = 0.0, clearTimeInFutureY = 0.0, clearTimeInFutureZ = 0.0;
 
@@ -183,7 +183,19 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
 
     pCollisionOrderMetric->secondary = minClearTime;
 
-    //LOGD("coll w obj at (X,Y) (%f, %f): distX %f Y %f Z %f metric prim %f sec %f (%f %f %f)",
+    // NOTE: May need a 3rd tiebreaking criteria later.
+    // Ex) Pushing diagonally (inwards into screen and to the right) into the following:
+    //   [1]
+    // [ 2 ]
+    //   ^
+    // At the marked horizontal location (^), we collide with blocks 1 and 2 at the same time,
+    // and the time until clearing is the same.
+    // Would need a 3rd criteria to resolve this - should prioritize block 2 since we'd been colliding
+    // with it in the past.
+    // Not sure this scenario will happen on a fixed 2D map, though, since we won't be pushing inwards on the Z direction.
+
+    //LOGD("obj at (%f, %f) coll w obj at (%f, %f): distX %f Y %f Z %f metric prim %f sec %f (%f %f %f)",
+    //  firstBoxPos.pos.x, firstBoxPos.pos.y,
     //  secondBoxPos.pos.x, secondBoxPos.pos.y,
     //  distX, distY, distZ,
     //  pCollisionOrderMetric->primary,
@@ -197,7 +209,7 @@ bool CollisionModel::modelsCollideAabbAabb(PmModelStorage *pFirst, PmModelStorag
 }
 
 // This one should be defined per Collision Model type.
-void CollisionModel::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo)
+void CollisionModel::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo, int cnt)
 {
 
 }
@@ -206,7 +218,8 @@ void CollisionModel::onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOt
 // Handle collision between two models.
 // Only apply the handling to the first model, but not the second.
 // This allows callers to have more control over when models get processed.
-void CollisionModel::handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo)
+// The cnt parameter tells which collision this is for the first object (starting from 0).
+void CollisionModel::handleCollision(PmModelStorage *pFirstIo, PmModelStorage *pSecondIo, int cnt)
 {
   CollisionModel *pActiveModel = pFirstIo->in.pModel->getCollisionModel();
   CollisionModelType type = pActiveModel->getType();
@@ -217,12 +230,12 @@ void CollisionModel::handleCollision(PmModelStorage *pFirstIo, PmModelStorage *p
     case COLLISION_MODEL_AABB:
     case COLLISION_MODEL_AABB_IMMOBILE:
     {
-      static_cast<AABB*>(pActiveModel)->onCollision(pFirstIo, pSecondIo);
+      static_cast<AABB*>(pActiveModel)->onCollision(pFirstIo, pSecondIo, cnt);
       break;
     }
     case COLLISION_MODEL_AABB_CONTROLLABLE:
     {
-      static_cast<AABBControllable*>(pActiveModel)->onCollision(pFirstIo, pSecondIo);
+      static_cast<AABBControllable*>(pActiveModel)->onCollision(pFirstIo, pSecondIo, cnt);
       break;
     }
     default:

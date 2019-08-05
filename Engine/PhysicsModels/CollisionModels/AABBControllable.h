@@ -6,7 +6,11 @@
 class AABBControllable : public AABB
 {
 protected:
-  void onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo);
+  void onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo, int cnt);
+
+  // Flag indicating if the controllable model is in a state that allows jumping, ex. colliding with a floor underneath it.
+  // This is set during collision checks, but should be cleared by the parent object.
+  bool m_bJumpEn{ false };
 
 public:
   AABBControllable();
@@ -56,7 +60,10 @@ public:
     float &clearTimeInFutureY,
     float &clearTimeInFutureZ);
 
-  virtual void onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo);
+  virtual void setJumpEn(bool bJumpEn);
+  virtual bool getJumpEn();
+
+  virtual void onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo, int cnt);
 };
 
 #endif

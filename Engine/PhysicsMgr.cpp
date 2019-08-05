@@ -139,9 +139,10 @@ bool PhysicsManager::run(double timeMs)
       // Sort collisions in time-order.
       std::sort(itFirst->second.out.collisions.begin(), itFirst->second.out.collisions.end(), _collisionCompare);
 
+      int cnt = 0;
       for (auto itColl = itFirst->second.out.collisions.begin(); itColl != itFirst->second.out.collisions.end(); ++itColl)
       {
-        CollisionModel::handleCollision(&(itFirst->second), itColl->first);
+        CollisionModel::handleCollision(&(itFirst->second), itColl->first, cnt++);
       }
 
       if (!bLastStep)
