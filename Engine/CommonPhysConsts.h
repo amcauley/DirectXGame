@@ -52,6 +52,10 @@
 #define MOVEMENT_VEL_MPS        4.0  // m/s
 #define SPRINT_BOOST            1.7  // multiplication factor
 
+#define JUMP_COOLDOWN_MS                50
+#define WALL_JUMP_CONTROL_COOLDOWN_MS   300
+#define JUMP_EN_COOLDOWN_MS             100
+
 #define PHYS_CONST_PI           3.14159
 #define TURN_RATE_RAD_PS        (1.0 * PHYS_CONST_PI) // Turning rate in radians per sec
 

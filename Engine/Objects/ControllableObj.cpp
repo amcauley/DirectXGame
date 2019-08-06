@@ -15,6 +15,8 @@ ControllableObj::ControllableObj()
   m_pos.pos.y = PLAYER_HITBOX_H / 2;
   m_pPModel->setPuModel(new GravityModel);
   m_lastJumpMs = 0.0;
+  m_lastWallJumpMs = 0.0;
+  m_lastJumpEnMs = 0.0;
   m_pingSoundHandle = SOUND_MGR_INVALID_HANDLE;
 
   LOGD("GameObject %lu = type %d", static_cast<unsigned long>(m_uuid), m_type);
@@ -54,64 +56,121 @@ bool ControllableObj::update(
   SoundMgr *pSoundMgr)
 {
   Pos3 tempVel = getVel();
-  const double JUMP_COOLDOWN_MS = 300;
-  if ((input.bSpace) &&
-      (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS) &&
-      static_cast<AABBControllable*>(m_pPModel->getCollisionModel())->getJumpEn())
+  AABBControllable *pPhysModel = static_cast<AABBControllable*>(m_pPModel->getCollisionModel());
+
+  // JumpEn seems to be a bit finnicky, sometimes on/off.
+  // Prob depends on number of time chunks processed and how far collisions have been offset from ground collisions.
+  // Apply some historesis, ex. if it was on within last x ms, keep it on.
+  // Should reset after a jump, to prevent multi-jumping.
+  if (pPhysModel->getJumpEn())
+  {
+    m_lastJumpEnMs = timeMs;
+  }
+  bool bJumpEn = (timeMs - m_lastJumpEnMs < JUMP_EN_COOLDOWN_MS);
+
+  bool bJump = false;
+  if ((input.bSpace) && (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS))
+  {
+    if (bJumpEn)
+    {
+      bJump = true;
+      tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+    }
+    else
+    {
+      Pos2 wallJumpNormal = pPhysModel->getWallJumpNormal();
+      bJump = (wallJumpNormal.pos.x != 0) || (wallJumpNormal.pos.y != 0);
+
+      // Wall jumps freeze control inputs for a while.
+      if (bJump)
+      {
+        tempVel.pos.x = wallJumpNormal.pos.x * (MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP);
+        tempVel.pos.z = wallJumpNormal.pos.y * (MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP);
+        tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+        m_lastWallJumpMs = timeMs;
+      }
+    }
+  }
+
+  if (bJump)
   {
     m_lastJumpMs = timeMs;
-    tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+    // Clear jumpEn historesis by activing as if the last enable time was long ago.
+    m_lastJumpEnMs = -JUMP_EN_COOLDOWN_MS;
 
     pSoundMgr->playSound(m_pingSoundHandle);
   }
 
-  // Need to explicitly reset jump flag - it's set in the physics collision model, but cleared by the object.
-  static_cast<AABBControllable*>(m_pPModel->getCollisionModel())->setJumpEn(false);
-
-  // Handle non-jump movement
-  float velUp = input.keyUp;
-  float velRight = input.keyRight;
-  
-  float normFactor = std::sqrt(velUp*velUp + velRight*velRight);
-
-  // Don't bother normalizing unless we're moving too fast. This should allow us to move slowly if desired instead of
-  // forcing constant speed all the time.
-  if (normFactor > MOVEMENT_VEL_MPS * MOVEMENT_VEL_MPS)
+  // Normal movements are applied on top of jump velocities.
   {
-    float invNormFactor = 1.0 / normFactor;
-    velUp *= normFactor * invNormFactor;
-    velRight *= normFactor * invNormFactor;
+    float velUp = input.keyUp * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP;
+    float velRight = input.keyRight * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP;
+
+    // Rotations
+    Pos3 tempRotVel = getRotVel();
+    tempRotVel.pos.x = input.pitchUp * TURN_RATE_RAD_PS * SEC_PER_STEP;
+    tempRotVel.pos.y = input.yawCw * TURN_RATE_RAD_PS * SEC_PER_STEP;
+    setRotVel(tempRotVel);
+
+    Pos3 tempRot = getRot();
+
+    if (tempRot.pos.x > MAX_PITCH_RADS)
+    {
+      tempRot.pos.x = MAX_PITCH_RADS;
+    }
+    else if (tempRot.pos.x < MIN_PITCH_RADS)
+    {
+      tempRot.pos.x = MIN_PITCH_RADS;
+    }
+
+    setRot(tempRot);
+
+    float sinFactor = std::sin(tempRot.pos.y);
+    float cosFactor = std::cos(tempRot.pos.y);
+    float origVelUp = velUp;
+    velUp = velUp * cosFactor - velRight * sinFactor;
+    velRight = velRight * cosFactor + origVelUp * sinFactor;
+
+    float speedBoost = input.bSprint ? SPRINT_BOOST : 1.0;
+    float controlVelX = velRight * speedBoost;
+    float controlVelZ = -velUp * speedBoost;
+
+    // If in the air, need to carry over starting velocity, ex. from previous jump.
+    //LOGD("jumpEn %s, ts %f", bJumpEn ? "ON" : "OFF", timeMs);
+    if (!bJumpEn)
+    {
+      // Skip controller updates if we've recently wall-jumped.
+      if (timeMs - m_lastWallJumpMs > WALL_JUMP_CONTROL_COOLDOWN_MS)
+      {
+        tempVel.pos.x += controlVelX;
+        tempVel.pos.z += controlVelZ;
+      }
+    }
+    else
+    {
+      tempVel.pos.x = controlVelX;
+      tempVel.pos.z = controlVelZ;
+    }
+
+    // Limit max speed.
+    float maxVelUps = MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * speedBoost;
+    float normFactor = std::sqrt(tempVel.pos.x * tempVel.pos.x + tempVel.pos.z * tempVel.pos.z);
+
+    // Don't bother normalizing unless we're moving too fast. This should allow us to move slowly if desired instead of
+    // forcing constant speed all the time.
+    //LOGD("Pre-scaling vel: (%f, %f), max %f UPS", tempVel.pos.x, tempVel.pos.z, maxVelUps);
+    if (normFactor > maxVelUps)
+    {
+      float invNormFactor = maxVelUps / normFactor;
+      tempVel.pos.x *= invNormFactor;
+      tempVel.pos.z *= invNormFactor;
+      //LOGD("Post-scaling vel: (%f, %f), scaling %f", tempVel.pos.x, tempVel.pos.z, invNormFactor);
+    }
   }
 
-  // Rotations
-  Pos3 tempRotVel = getRotVel();
-  tempRotVel.pos.x = input.pitchUp * TURN_RATE_RAD_PS * SEC_PER_STEP;
-  tempRotVel.pos.y = input.yawCw * TURN_RATE_RAD_PS * SEC_PER_STEP;
-  setRotVel(tempRotVel);
-
-
-  Pos3 tempRot = getRot();
-
-  if (tempRot.pos.x > MAX_PITCH_RADS)
-  {
-    tempRot.pos.x = MAX_PITCH_RADS;
-  }
-  else if (tempRot.pos.x < MIN_PITCH_RADS)
-  {
-    tempRot.pos.x = MIN_PITCH_RADS;
-  }
-
-  setRot(tempRot);
-
-  float sinFactor = std::sin(tempRot.pos.y);
-  float cosFactor = std::cos(tempRot.pos.y);
-  float origVelUp = velUp;
-  velUp           = velUp * cosFactor - velRight * sinFactor;
-  velRight        = velRight * cosFactor + origVelUp * sinFactor;
-
-  float speedBoost  = input.bSprint ? SPRINT_BOOST : 1.0;
-  tempVel.pos.x     = velRight * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * speedBoost;
-  tempVel.pos.z     = -velUp * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * speedBoost;
+  // Need to explicitly reset jump flags - it's set in the physics collision model, but cleared by the object.
+  pPhysModel->setJumpEn(false);
+  pPhysModel->setWallJumpNormal(Pos2(0.0, 0.0));
 
   setVel(tempVel);
 

@@ -12,6 +12,13 @@ protected:
   // This is set during collision checks, but should be cleared by the parent object.
   bool m_bJumpEn{ false };
 
+  // Wall jump direction info.
+  // No direct connection with the basing jump enable flag, although the character object could choose to prioritize one over the other.
+  // Normal direction (in the X-Z plane) pushing outward from the wall.
+  // If (0, 0), there's no wall jump to process.
+  // This is set during collision checks, but should be cleared by the parent object.
+  Pos2 m_wallJumpNormal;
+
 public:
   AABBControllable();
   AABBControllable(float w, float h, float d);
@@ -62,6 +69,9 @@ public:
 
   virtual void setJumpEn(bool bJumpEn);
   virtual bool getJumpEn();
+
+  virtual void setWallJumpNormal(Pos2 &normal);
+  virtual Pos2 getWallJumpNormal();
 
   virtual void onCollision(PmModelStorage *pPrimaryIo, PmModelStorage *pOtherModelIo, int cnt);
 };

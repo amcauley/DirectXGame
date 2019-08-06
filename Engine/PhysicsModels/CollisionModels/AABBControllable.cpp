@@ -284,11 +284,24 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
   Pos3 outPos = primaryPos;
   Pos3 outVel = primaryVel;
 
+  // A controllable object can wall jump if it's colliding with a fixed box in front of it and the box
+  // touches the lower half of the controllable hit box (i.e. "legs").
+  bool bWallJumpPossible = (
+    (primaryPos.pos.y + pPrimaryAabb->getPos().pos.y > otherPos.pos.y + pOtherAabb->getPos().pos.y - pOtherAabb->getDim().pos.y / 2) &&
+    (primaryPos.pos.y + pPrimaryAabb->getPos().pos.y - pPrimaryAabb->getDim().pos.y / 2 < otherPos.pos.y + pOtherAabb->getPos().pos.y + pOtherAabb->getDim().pos.y / 2));
+
+
   if (bHitX)
   {
     //LOGD("Hit X, vel %f -> 0, pos %f -> %f", outVel.pos.x, outPos.pos.x, outPos.pos.x - distX);
     outVel.pos.x = 0;
     outPos.pos.x -= distX;
+
+    if (bWallJumpPossible)
+    {
+      // Magnitude doesn't matter, only sign/direction.
+      m_wallJumpNormal.pos.x = distX > 0 ? -1: 1;
+    }
   }
   if (bHitY)
   {
@@ -308,6 +321,11 @@ void AABBControllable::onCollisionWithAabbImmobile(PmModelStorage *pPrimaryIo, P
     //LOGD("Hit Z, vel %f -> 0, pos %f -> %f", outVel.pos.z, outPos.pos.z, outPos.pos.z - distZ);
     outVel.pos.z = 0;
     outPos.pos.z -= distZ;
+
+    if (bWallJumpPossible)
+    {
+      m_wallJumpNormal.pos.y = distY > 0 ? -1 : 1;
+    }
   }
 
   // Write out updated location/velocity.
@@ -325,4 +343,16 @@ void AABBControllable::setJumpEn(bool bJumpEn)
 bool AABBControllable::getJumpEn()
 {
   return m_bJumpEn;
+}
+
+
+void AABBControllable::setWallJumpNormal(Pos2 &normal)
+{
+  m_wallJumpNormal = normal;
+}
+
+
+Pos2 AABBControllable::getWallJumpNormal()
+{
+  return m_wallJumpNormal;
 }
