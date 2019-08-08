@@ -10,7 +10,6 @@ private:
   enum NAMED_OBJECTS
   {
     TSO_PLAYER = 0,
-    TSO_FLOOR,
     NAMED_OBJECTS_COUNT
   };
 

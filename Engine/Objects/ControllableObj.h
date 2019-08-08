@@ -11,7 +11,11 @@ class ControllableObj : public GameObject
 private:
   double m_lastJumpMs;
   double m_lastWallJumpMs;
+
   double m_lastJumpEnMs;
+  double m_lastWallJumpEnMs;
+  Pos2 m_lastWallJumpNormal;
+
   uint32_t m_pingSoundHandle;
 
 public:

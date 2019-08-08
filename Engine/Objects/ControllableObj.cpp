@@ -17,6 +17,7 @@ ControllableObj::ControllableObj()
   m_lastJumpMs = 0.0;
   m_lastWallJumpMs = 0.0;
   m_lastJumpEnMs = 0.0;
+  m_lastWallJumpEnMs = 0.0;
   m_pingSoundHandle = SOUND_MGR_INVALID_HANDLE;
 
   LOGD("GameObject %lu = type %d", static_cast<unsigned long>(m_uuid), m_type);
@@ -58,6 +59,9 @@ bool ControllableObj::update(
   Pos3 tempVel = getVel();
   AABBControllable *pPhysModel = static_cast<AABBControllable*>(m_pPModel->getCollisionModel());
 
+  /* ~~~       ~~~ */
+  /* ~~  JUMPS  ~~ */
+  /* ~~~       ~~~ */
   // JumpEn seems to be a bit finnicky, sometimes on/off.
   // Prob depends on number of time chunks processed and how far collisions have been offset from ground collisions.
   // Apply some historesis, ex. if it was on within last x ms, keep it on.
@@ -68,27 +72,32 @@ bool ControllableObj::update(
   }
   bool bJumpEn = (timeMs - m_lastJumpEnMs < JUMP_EN_COOLDOWN_MS);
 
-  bool bJump = false;
-  if ((input.bSpace) && (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS))
+  // Hysteresis for wall jumps.
+  Pos2 wallJumpNormal = pPhysModel->getWallJumpNormal();
+  if ((wallJumpNormal.pos.x != 0) || (wallJumpNormal.pos.y != 0))
   {
+    m_lastWallJumpEnMs = timeMs;
+    m_lastWallJumpNormal = wallJumpNormal;
+  }
+  bool bWallJumpEn = (timeMs - m_lastWallJumpEnMs < WALL_JUMP_EN_COOLDOWN_MS);
+
+  bool bJump = false;
+  if ((input.bSpaceDown) && (timeMs - m_lastJumpMs > JUMP_COOLDOWN_MS))
+  {
+    bJump = bJumpEn || bWallJumpEn;
+
     if (bJumpEn)
     {
-      bJump = true;
       tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
     }
-    else
+    else if (bWallJumpEn)
     {
-      Pos2 wallJumpNormal = pPhysModel->getWallJumpNormal();
-      bJump = (wallJumpNormal.pos.x != 0) || (wallJumpNormal.pos.y != 0);
-
       // Wall jumps freeze control inputs for a while.
-      if (bJump)
-      {
-        tempVel.pos.x = wallJumpNormal.pos.x * (MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP);
-        tempVel.pos.z = wallJumpNormal.pos.y * (MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP);
-        tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
-        m_lastWallJumpMs = timeMs;
-      }
+      tempVel.pos.x = m_lastWallJumpNormal.pos.x * (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+      tempVel.pos.z = m_lastWallJumpNormal.pos.y * (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+      tempVel.pos.y = (JUMP_VELOCITY_MPS * MPS_TO_UNITS_PER_STEP);
+      //LOGD("Wall jump xz vel: (%f, %f)", tempVel.pos.x, tempVel.pos.z);
+      m_lastWallJumpMs = timeMs;
     }
   }
 
@@ -97,22 +106,22 @@ bool ControllableObj::update(
     m_lastJumpMs = timeMs;
     // Clear jumpEn historesis by activing as if the last enable time was long ago.
     m_lastJumpEnMs = -JUMP_EN_COOLDOWN_MS;
+    m_lastWallJumpEnMs = -WALL_JUMP_EN_COOLDOWN_MS;
 
     pSoundMgr->playSound(m_pingSoundHandle);
   }
 
-  // Normal movements are applied on top of jump velocities.
-  {
-    float velUp = input.keyUp * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP;
-    float velRight = input.keyRight * MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP;
 
-    // Rotations
+  /* ~~~           ~~~ */
+  /* ~~  ROTATIONS  ~~ */
+  /* ~~~           ~~~ */
+  Pos3 tempRot = getRot();
+  {
     Pos3 tempRotVel = getRotVel();
+
     tempRotVel.pos.x = input.pitchUp * TURN_RATE_RAD_PS * SEC_PER_STEP;
     tempRotVel.pos.y = input.yawCw * TURN_RATE_RAD_PS * SEC_PER_STEP;
     setRotVel(tempRotVel);
-
-    Pos3 tempRot = getRot();
 
     if (tempRot.pos.x > MAX_PITCH_RADS)
     {
@@ -124,36 +133,44 @@ bool ControllableObj::update(
     }
 
     setRot(tempRot);
+  }
+
+
+  /* ~~~                   ~~~ */
+  /* ~~  LATERAL MOVEMENTS  ~~ */
+  /* ~~~                   ~~~ */
+  {
+    float accelUp = input.keyUp * MOVEMENT_ACCEL_MPSPS * MPSPS_TO_UNIT_PER_STEP_PER_STEP;
+    float accelRight = input.keyRight * MOVEMENT_ACCEL_MPSPS * MPSPS_TO_UNIT_PER_STEP_PER_STEP;
 
     float sinFactor = std::sin(tempRot.pos.y);
     float cosFactor = std::cos(tempRot.pos.y);
-    float origVelUp = velUp;
-    velUp = velUp * cosFactor - velRight * sinFactor;
-    velRight = velRight * cosFactor + origVelUp * sinFactor;
+    float origAccelUp = accelUp;
+    accelUp = accelUp * cosFactor - accelRight * sinFactor;
+    accelRight = accelRight * cosFactor + origAccelUp * sinFactor;
 
     float speedBoost = input.bSprint ? SPRINT_BOOST : 1.0;
-    float controlVelX = velRight * speedBoost;
-    float controlVelZ = -velUp * speedBoost;
+    float controlAccelX = accelRight * speedBoost;
+    float controlAccelZ = -accelUp * speedBoost;
 
-    // If in the air, need to carry over starting velocity, ex. from previous jump.
-    //LOGD("jumpEn %s, ts %f", bJumpEn ? "ON" : "OFF", timeMs);
-    if (!bJumpEn)
+    // If not actively accelerating, decelerate.
+    float frictionDecelFactor = bJumpEn ? FRICTION_DECEL_FACTOR_GROUND : FRICTION_DECEL_FACTOR_AIR;
+    float accelX = controlAccelX == 0 ? -tempVel.pos.x * frictionDecelFactor : controlAccelX;
+    float accelZ = controlAccelZ == 0 ? -tempVel.pos.z * frictionDecelFactor : controlAccelZ;
+
+    // Skip controller updates if we've recently wall-jumped.
+    if (timeMs - m_lastWallJumpMs > WALL_JUMP_CONTROL_COOLDOWN_MS)
     {
-      // Skip controller updates if we've recently wall-jumped.
-      if (timeMs - m_lastWallJumpMs > WALL_JUMP_CONTROL_COOLDOWN_MS)
-      {
-        tempVel.pos.x += controlVelX;
-        tempVel.pos.z += controlVelZ;
-      }
+      tempVel.pos.x += accelX;
+      tempVel.pos.z += accelZ;
     }
-    else
-    {
-      tempVel.pos.x = controlVelX;
-      tempVel.pos.z = controlVelZ;
-    }
+
+    // Limit min speed.
+    tempVel.pos.x = std::abs(tempVel.pos.x) < VEL_STOP_THRESH_MPS * MPS_TO_UNITS_PER_STEP ? 0.0 : tempVel.pos.x;
+    tempVel.pos.z = std::abs(tempVel.pos.z) < VEL_STOP_THRESH_MPS * MPS_TO_UNITS_PER_STEP ? 0.0 : tempVel.pos.z;
 
     // Limit max speed.
-    float maxVelUps = MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * speedBoost;
+    float maxVelUps = MAX_MOVEMENT_VEL_MPS * MPS_TO_UNITS_PER_STEP * speedBoost;
     float normFactor = std::sqrt(tempVel.pos.x * tempVel.pos.x + tempVel.pos.z * tempVel.pos.z);
 
     // Don't bother normalizing unless we're moving too fast. This should allow us to move slowly if desired instead of
@@ -168,14 +185,20 @@ bool ControllableObj::update(
     }
   }
 
-  // Need to explicitly reset jump flags - it's set in the physics collision model, but cleared by the object.
-  pPhysModel->setJumpEn(false);
-  pPhysModel->setWallJumpNormal(Pos2(0.0, 0.0));
 
-  setVel(tempVel);
+  /* ~~~         ~~~ */
+  /* ~~  CLEANUP  ~~ */
+  /* ~~~         ~~~ */
+  {
+    // Need to explicitly reset jump flags - it's set in the physics collision model, but cleared by the object.
+    pPhysModel->setJumpEn(false);
+    pPhysModel->setWallJumpNormal(Pos2(0.0, 0.0));
 
-  //LOGD("x: %f, vx %f", getPos().pos.x, getVel().pos.x);
-  //LOGD("xRot: %f, vXRot %f", getRot().pos.x, getRotVel().pos.x);
+    setVel(tempVel);
+
+    //LOGD("x: %f, vx %f", getPos().pos.x, getVel().pos.x);
+    //LOGD("xRot: %f, vXRot %f", getRot().pos.x, getRotVel().pos.x);
+  }
 
   return true;
 }

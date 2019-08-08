@@ -16,27 +16,6 @@ TestScene::TestScene()
 
 bool TestScene::init(ID3D11Device *dev, ID3D11DeviceContext *devcon)
 {
-  TexBox *pBox = NULL;
-  PolyObj *pObj = NULL;
-
-  // Floor
-  LOGD("Creating TSO_FLOOR");
-  pBox = new TexBox;
-  pBox->init(
-    dev, devcon,
-    20, 0.1, 20,
-    std::string("Textures/TestPattern.dds"),
-    20, 20
-    );
-  pObj = new PolyObj;
-  pObj->init(pBox);
-  // Now set the global position.
-  pObj->setPos(Pos3(0.0, -9.0, 0.0));
-  pObj->setPModel(new PhysicsModel);
-  pObj->getPModel()->setCollisionModel(new AABB(20, 0.1, 20));
-  pObj->getPModel()->getCollisionModel()->setType(COLLISION_MODEL_AABB_IMMOBILE);
-  m_objMgr.addObject(TSO_FLOOR, pObj);
-
   // File loading
   m_objMgr.generateFromFile("Tools/TestOut.txt", dev, devcon, NAMED_OBJECTS_COUNT);
 

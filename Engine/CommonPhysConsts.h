@@ -42,19 +42,27 @@
 // Maximum distance used in collision ordering calculations.
 #define MAX_COLLISION_DIST      (RENDER_FAR_DIST_M * UNITS_PER_METER)
 
-#define PLAYER_HITBOX_W         0.5
-#define PLAYER_HITBOX_H         2.0
+#define PLAYER_HITBOX_W         0.45
+#define PLAYER_HITBOX_H         1.4
 #define PLAYER_HITBOX_D         0.5
 #define EYE_VERT_OFFSET         0.9  // Camera offset above center of player hitbox
 
 
-#define JUMP_VELOCITY_MPS       10.0  // m/s
-#define MOVEMENT_VEL_MPS        4.0  // m/s
-#define SPRINT_BOOST            1.7  // multiplication factor
+#define JUMP_VELOCITY_MPS             10.0    // m/s
+#define MAX_MOVEMENT_VEL_MPS          6.0     // m/s
+#define MOVEMENT_ACCEL_MPSPS          4.0     // m/s/s
+#define FRICTION_DECEL_FACTOR_GROUND  0.05    // Ground deceleration when there's no active controller input, as a mult. factor of the current velocity.
+#define FRICTION_DECEL_FACTOR_AIR     0.003   // Air deceleration when there's no input.
+#define VEL_STOP_THRESH_MPS           0.001   // Velocity magnitude below which velocity is zero'd out.
+#define SPRINT_BOOST                  1.7     // multiplication factor
+
 
 #define JUMP_COOLDOWN_MS                50
-#define WALL_JUMP_CONTROL_COOLDOWN_MS   300
 #define JUMP_EN_COOLDOWN_MS             100
+
+#define WALL_JUMP_CONTROL_COOLDOWN_MS   100
+#define WALL_JUMP_EN_COOLDOWN_MS        250
+
 
 #define PHYS_CONST_PI           3.14159
 #define TURN_RATE_RAD_PS        (1.0 * PHYS_CONST_PI) // Turning rate in radians per sec

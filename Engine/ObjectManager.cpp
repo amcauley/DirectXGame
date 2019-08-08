@@ -60,7 +60,7 @@ void ObjectManager::generateFromFile(
 
       ControllableObj *pObj = new ControllableObj;
       pObj->init(dev, devcon);
-      pObj->setPos(Pos3(locX, locY, locZ));
+      pObj->setPos(Pos3(locX, locY + PLAYER_HITBOX_H / 2, locZ));
       pObj->setVModel(pVObj);
 
       // Player object is ID 0 by default.

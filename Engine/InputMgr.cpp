@@ -3,11 +3,8 @@
 #include "Util.h"
 
 
-bool InputMgr::init(HINSTANCE hinst, HWND hwnd, uint32_t width, uint32_t height)
+bool InputMgr::init(HINSTANCE hinst, HWND hwnd)
 {
-  m_width = width;
-  m_height = height;
-
   if (HR_FAILED(DirectInput8Create(hinst, DIRECTINPUT_VERSION, IID_IDirectInput8, (void**)&m_pDirectInput, NULL)))
   {
     LOGE("Failed DirectInput8 creation");
@@ -87,12 +84,16 @@ bool InputMgr::getUpdate(InputApi &inputUpdate)
   bool bSuccess = true;
   memset(&inputUpdate, 0, sizeof(inputUpdate));
 
+  bool bLastSpace = m_keyboardState[DIK_SPACE] & 0x80;
+
   // Keyboard updates.
   bSuccess = readKeyboard();
-  
+ 
+  inputUpdate.bSpaceDown = false;
   if (m_keyboardState[DIK_SPACE] & 0x80)
   {
     inputUpdate.bSpace = true;
+    inputUpdate.bSpaceDown = !bLastSpace;
   }
 
   bool bKeyUp     = (0x80 & m_keyboardState[DIK_UP]) ||

@@ -37,7 +37,7 @@ bool GameMgr::init(
     return false;
   }
 
-  if (!m_inputMgr.init(hinst, hwnd, width, height))
+  if (!m_inputMgr.init(hinst, hwnd))
   {
     LOGE("Failed to init input mgr");
     return false;

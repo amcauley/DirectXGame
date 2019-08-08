@@ -17,25 +17,23 @@ typedef struct InputApi_
 {
   // Processed directions and magnitudes, in range of -1 (reverse) to 1.
   // These might be binary for keyboard but could have intermediate values for some mouse controls.
-  float keyUp;
-  float keyRight;
+  float keyUp{ 0 };
+  float keyRight{ 0 };
   
   // Rotations
-  float yawCw;    // Yaw clockwise
-  float pitchUp;  // Pitch Up
+  float yawCw{ 0 };    // Yaw clockwise
+  float pitchUp{ 0 };  // Pitch Up
 
   // Binary presses.
-  bool bSpace;
-  bool bSprint;
+  bool bSpace{ false };
+  bool bSpaceDown{ false };  // Space bar just got pressed.
+  bool bSprint{ false };
 
 } InputApi;
 
 class InputMgr
 {
 private:
-  uint32_t m_width;
-  uint32_t m_height;
-
   IDirectInput8* m_pDirectInput;
   IDirectInputDevice8* m_pKeyboard;
 
@@ -44,7 +42,7 @@ private:
   unsigned char m_keyboardState[KEYBOARD_STATE_ENTRIES];
 
 public:
-  bool init(HINSTANCE hinst, HWND hwnd, uint32_t width, uint32_t height);
+  bool init(HINSTANCE hinst, HWND hwnd);
   bool release();
 
   bool readKeyboard();
